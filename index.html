@@ -1,131 +1,762 @@
-<!-- Updated index.html -->
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Edward Kasimir - Launch Page</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="layout.css" />
-    <link rel="stylesheet" href="animation.css" />
-  </head>
-  <body>
-    <button
-      id="muteToggle"
-      class="mute-toggle"
-      type="button"
-      aria-label="Mute sound"
-      aria-pressed="false"
-    >
-      🔊
-    </button>
+<head>
+  <meta charset="UTF-8">
+  <title>Pong</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background-color: #111;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: 'Courier New', monospace;
+      color: #fff;
+      overflow: hidden;
+      text-shadow: 0 1px 6px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,0.9);
+    }
+    #scoreboard {
+      display: flex;
+      align-items: center;
+      width: 804px;
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 6px;
+      letter-spacing: 4px;
+    }
+    #score-player { flex: 1; text-align: center; }
+    #score-ai     { flex: 1; text-align: center; }
+    #label-row {
+      display: flex;
+      width: 804px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: #bbb;
+      margin-bottom: 12px;
+    }
+    #label-player { flex: 1; text-align: center; }
+    #label-ai     { flex: 1; text-align: center; }
+    #frenzy-counter {
+      flex: 0 0 220px;
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      line-height: 1.4;
+      text-align: center;
+      visibility: hidden;
+      white-space: pre;
+    }
+    #frenzy-gap { flex: 0 0 220px; }
+    canvas { border: 2px solid #555; cursor: none; }
+    #msg { margin-top: 14px; font-size: 13px; color: #ddd; letter-spacing: 1px; }
+    #controls {
+      margin-top: 12px;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      font-size: 13px;
+      background: rgba(0,0,0,0.65);
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .control-group { display: flex; gap: 8px; align-items: center; }
+    button {
+      background: rgba(40,40,40,0.9); color: #fff; border: 1px solid #666;
+      padding: 6px 12px; cursor: pointer; border-radius: 4px;
+      font-family: 'Courier New', monospace; font-size: 12px;
+      transition: background 0.15s, border-color 0.15s;
+      text-shadow: none;
+    }
+    button:hover { background: rgba(70,70,70,0.95); border-color: #888; }
+    button.active { background: #4af; color: #000; border-color: #4af; }
+    button.music-on { background: #a4f; color: #000; border-color: #a4f; }
+    #speed-display { color: #ccc; min-width: 40px; text-align: center; }
+    #track-name { color: #aaa; font-size: 11px; min-width: 140px; }
+    input[type="range"] { width: 110px; height: 6px; cursor: pointer; accent-color: #4af; }
+    .label { color: #aaa; font-size: 11px; letter-spacing: 1px; }
+    #keys-help {
+      margin-top: 7px; font-size: 11px; color: #bbb; letter-spacing: 1px;
+      background: rgba(0,0,0,0.5); padding: 4px 12px; border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="scoreboard">
+    <span id="score-player">0</span>
+    <div id="frenzy-counter"></div>
+    <span id="score-ai">0</span>
+  </div>
+  <div id="label-row">
+    <span id="label-player">YOU</span>
+    <div id="frenzy-gap"></div>
+    <span id="label-ai">CPU</span>
+  </div>
+  <canvas id="c"></canvas>
+  <div id="msg">SPACE or click to start &nbsp;|&nbsp; Mouse or ↑↓ / Num8·2 to move paddle</div>
+  <div id="keys-help">← or 4 SHIELD &nbsp;|&nbsp; → or 6 SHOOT &nbsp;|&nbsp; SPACE Pause &nbsp;|&nbsp; +/= Speed up &nbsp;|&nbsp; -/_ Slow down &nbsp;|&nbsp; / Next track</div>
 
-    <div class="container">
-      <div class="button-wrapper" id="button1Wrapper">
-        <a
-          href="https://edulus.github.io/Close-Encounters-with-5-Tones/"
-          class="button"
-          id="button1"
-          aria-label="Close Encounters with 5 Tones"
-          aria-describedby="tooltip1"
-        ></a>
-        <div class="tooltip" id="tooltip1" role="tooltip">
-          Close Encounters with 5 Tones
-        </div>
-      </div>
-      <div class="button-wrapper" id="button2Wrapper">
-        <a
-          href="https://edulus.github.io/Swirling-Cosmic-Egg/"
-          class="button"
-          id="button2"
-          aria-label="Swirling Cosmic Egg"
-          aria-describedby="tooltip2"
-        ></a>
-        <div class="tooltip" id="tooltip2" role="tooltip">
-          Swirling Cosmic Egg
-        </div>
-      </div>
-      <div class="button-wrapper" id="button3Wrapper">
-        <a
-          href="https://edulus.github.io/Space-Sounds-Generator/"
-          class="button"
-          id="button3"
-          aria-label="Space Sounds Generator"
-          aria-describedby="tooltip3"
-        ></a>
-        <div class="tooltip" id="tooltip3" role="tooltip">
-          Space Sounds Generator
-        </div>
-      </div>
-      <div class="button-wrapper" id="button4Wrapper">
-        <a
-          href="https://edulus.github.io/Ethereal_Chord_Generator/"
-          class="button"
-          id="button4"
-          aria-label="Ethereal Chord Generator"
-          aria-describedby="tooltip4"
-        ></a>
-        <div class="tooltip" id="tooltip4" role="tooltip">
-          Ethereal Chord Generator
-        </div>
-      </div>
-      <div class="button-wrapper" id="button5Wrapper">
-        <a
-          href="https://edulus.github.io/YT-DLP_Web_Interface/"
-          class="button"
-          id="button5"
-          aria-label="YouTube Audio Extractor"
-          aria-describedby="tooltip5"
-        ></a>
-        <div class="tooltip" id="tooltip5" role="tooltip">
-          YouTube Audio Extractor
-        </div>
-      </div>
+  <div id="controls">
+    <div class="control-group">
+      <span class="label">SPEED:</span>
+      <button id="speed-down">−</button>
+      <span id="speed-display">1.0x</span>
+      <button id="speed-up">+</button>
     </div>
-    <script type="module">
-      import { Layout } from "./layout.js";
-      import { Animation } from "./animation.js";
+    <div class="control-group">
+      <span class="label">TRAIL LEN:</span>
+      <input type="range" id="trail-length" min="5" max="100" value="30">
+    </div>
+    <div class="control-group">
+      <button id="music-toggle" class="music-on">♪ MUSIC: ON</button>
+      <button id="music-prev">◀</button>
+      <span id="track-name">—</span>
+      <button id="music-next">▶</button>
+    </div>
+  </div>
 
-      document.addEventListener("DOMContentLoaded", async () => {
-        const layout = new Layout();
+  <script>
+    // ─── Background images ────────────────────────────────────────────────────
+    // Place files named backgrounds/background_1.jpg, background_2.jpg, etc.
+    // The game will auto-discover however many exist and cycle every 90 seconds.
+    const BG_CYCLE_MS = 90000;
+    let bgImages = [];
+    let bgIndex  = 0;
 
-        // Audio is loaded dynamically so a failure here cannot prevent
-        // the click animation from being wired up.
-        let audio = null;
-        try {
-          const { AudioEngine } = await import("./audio.js");
-          audio = new AudioEngine();
-          audio.armAutoStart();
-        } catch (err) {
-          console.warn("Audio module failed to load:", err);
+    function applyBackground() {
+      if (!bgImages.length) return;
+      const s = document.body.style;
+      s.backgroundImage    = `url('${bgImages[bgIndex]}')`;
+      s.backgroundSize     = '100% 100%';
+      s.backgroundPosition = 'center';
+      s.backgroundRepeat   = 'no-repeat';
+    }
+
+    function applyNextBackground() {} // kept so resetGame call is harmless
+
+    (function discoverBackgrounds(n) {
+      const img = new Image();
+      img.onload = () => {
+        bgImages.push(`backgrounds/background_${n}.jpg`);
+        discoverBackgrounds(n + 1);
+      };
+      img.onerror = () => {
+        if (!bgImages.length) return;
+        bgIndex = Math.floor(Math.random() * bgImages.length);
+        applyBackground();
+        setInterval(() => {
+          bgIndex = (bgIndex + 1) % bgImages.length;
+          applyBackground();
+        }, BG_CYCLE_MS);
+      };
+      img.src = `backgrounds/background_${n}.jpg`;
+    })(1);
+
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const W = 800, H = 500;
+    canvas.width = W; canvas.height = H;
+
+    const PADDLE_W = 12, PADDLE_H = 90, BALL_R = 8;
+    const KEY_PADDLE_SPEED = 11;
+    const WIN_SCORE = 67;
+    const BULLET_R = 4, BULLET_SPEED = 9;
+    const HOLE_SIZE = 14, MAX_HOLES = 5;
+    const SHOT_COOLDOWN = 700;
+    const AI_SHOT_MIN = 2500, AI_SHOT_MAX = 5000;
+    const TRAIL_DURATION = 30000;
+    const TRAIL_SPEED_MULT = 3, TRAIL_SCORE_MULT = 3;
+
+    // ─── Audio context ────────────────────────────────────────────────────────
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // ─── SFX ─────────────────────────────────────────────────────────────────
+    function playPaddleSound() {
+      const t = audioCtx.currentTime;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(450, t);
+      o.frequency.exponentialRampToValueAtTime(250, t + 0.15);
+      g.gain.setValueAtTime(0.2, t);
+      g.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+      o.start(t); o.stop(t + 0.15);
+    }
+
+    function playFloorCeilingSound() {
+      const t = audioCtx.currentTime;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(200, t);
+      o.frequency.exponentialRampToValueAtTime(80, t + 0.12);
+      g.gain.setValueAtTime(0.18, t);
+      g.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+      o.start(t); o.stop(t + 0.12);
+    }
+
+    function playShootSound() {
+      const t = audioCtx.currentTime;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(900, t);
+      o.frequency.exponentialRampToValueAtTime(300, t + 0.1);
+      g.gain.setValueAtTime(0.12, t);
+      g.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+      o.start(t); o.stop(t + 0.1);
+    }
+
+    function playBulletHitSound() {
+      const t = audioCtx.currentTime;
+      for (let i = 0; i < 3; i++) {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = 'square';
+        o.frequency.setValueAtTime(800 - i * 200, t + i * 0.04);
+        g.gain.setValueAtTime(0.12, t + i * 0.04);
+        g.gain.exponentialRampToValueAtTime(0.01, t + i * 0.04 + 0.06);
+        o.start(t + i * 0.04); o.stop(t + i * 0.04 + 0.06);
+      }
+    }
+
+    function playShieldBlockSound() {
+      const t = audioCtx.currentTime;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(300, t);
+      o.frequency.linearRampToValueAtTime(600, t + 0.08);
+      o.frequency.linearRampToValueAtTime(300, t + 0.16);
+      g.gain.setValueAtTime(0.18, t);
+      g.gain.exponentialRampToValueAtTime(0.01, t + 0.16);
+      o.start(t); o.stop(t + 0.16);
+    }
+
+    // ─── Music (HTML5 Audio) ──────────────────────────────────────────────────
+    const BASE = 'https://www.fesliyanstudios.com/download-link.php?src=i&id=';
+    const tracks = [
+      { name: 'Feels Good',             id: 417  },
+      { name: 'Shire Girl',             id: 1466 },
+      { name: 'Emotion',                id: 458  },
+      { name: 'Silly Feet',             id: 394  },
+      { name: 'Beating Heart',          id: 392  },
+      { name: 'Lost In Dance',          id: 389  },
+      { name: 'Dodging Lasers',         id: 2893 },
+      { name: 'Bass Addict',            id: 2887 },
+      { name: 'Paranoia Dance',         id: 2909 },
+      { name: 'Give Me Back My Vibes',  id: 2901 },
+      { name: 'Erosion',                id: 2741 },
+      { name: 'Senses',                 id: 2711 },
+      { name: 'Lily',                   id: 2697 },
+      { name: 'Groovin',                id: 2677 },
+      { name: 'Utopia',                 id: 2663 },
+      { name: 'Slaps',                  id: 1002 },
+      { name: 'ShakaLaka',              id: 582  },
+      { name: 'Shake It Up',            id: 524  },
+      { name: 'Let Go',                 id: 432  },
+    ];
+    const frenzyTrackMeta = { name: 'Pyromania', id: 2917 };
+
+    const audio = new Audio();
+    audio.loop = true;
+    audio.volume = 0.9;
+
+    let musicOn = true;
+    let useFrenzyMusic = false;
+    let preFrenzyTrackIdx = 0;
+    let currentTrackIdx = Math.floor(Math.random() * tracks.length);
+
+    function setTrackSrc() {
+      const meta = useFrenzyMusic ? frenzyTrackMeta : tracks[currentTrackIdx];
+      audio.src = BASE + meta.id;
+      document.getElementById('track-name').textContent = meta.name;
+    }
+
+    function startMusic() {
+      setTrackSrc();
+      audio.play().catch(() => {});
+    }
+
+    function stopMusic() {
+      audio.pause();
+    }
+
+    function changeTrack(dir) {
+      currentTrackIdx = (currentTrackIdx + dir + tracks.length) % tracks.length;
+      if (musicOn && state === 'playing' && !useFrenzyMusic) {
+        setTrackSrc();
+        audio.play().catch(() => {});
+      } else {
+        document.getElementById('track-name').textContent = tracks[currentTrackIdx].name;
+      }
+    }
+
+    function syncMusicToState() {
+      if (musicOn && state === 'playing') {
+        if (audio.paused) startMusic();
+      } else {
+        stopMusic();
+      }
+    }
+
+    document.getElementById('music-toggle').addEventListener('click', e => {
+      musicOn = !musicOn;
+      e.target.textContent = musicOn ? '♪ MUSIC: ON' : '♪ MUSIC: OFF';
+      e.target.classList.toggle('music-on', musicOn);
+      audioCtx.resume();
+      syncMusicToState();
+    });
+    document.getElementById('music-prev').addEventListener('click', () => changeTrack(-1));
+    document.getElementById('music-next').addEventListener('click', () => changeTrack(1));
+
+    // ─── State ────────────────────────────────────────────────────────────────
+    let state = 'idle';
+    let speedMultiplier = 1.0;
+    let trailEnabled = false;
+    let trailMaxLength = 30;
+    let ballTrail = [];
+    let trailActive = false, trailEndTime = 0, nextTrailTime = 0;
+    let trailPausedRemaining = 0; // ms remaining when game was paused
+
+    const keys = {};
+    let lastPlayerShot = 0;
+    let nextAIShot = 0;
+
+    let playerBullets = [], aiBullets = [];
+    let aiHoles = [], playerHoles = [];
+
+    const player = { x: 20,          y: H / 2 - PADDLE_H / 2, score: 0 };
+    const ai     = { x: W-20-PADDLE_W, y: H / 2 - PADDLE_H / 2, score: 0 };
+    const ball   = { x: W/2, y: H/2, vx: 0, vy: 0, speed: 5 };
+
+    let mouseY = H / 2;
+    let winnerText = '';
+
+    function setSpeed(v) {
+      speedMultiplier = Math.min(2.0, Math.max(0.5, parseFloat(v.toFixed(1))));
+      document.getElementById('speed-display').textContent = speedMultiplier.toFixed(1) + 'x';
+    }
+
+    // ─── Input ────────────────────────────────────────────────────────────────
+    canvas.addEventListener('mousemove', e => {
+      const r = canvas.getBoundingClientRect();
+      mouseY = e.clientY - r.top;
+    });
+
+    canvas.addEventListener('click', () => {
+      if (state === 'idle' || state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; syncMusicToState(); }
+    });
+
+    document.addEventListener('keydown', e => {
+      keys[e.key] = true;
+      const arrows = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
+      if ([...arrows, ' '].includes(e.key)) e.preventDefault();
+
+      if (e.key === ' ') {
+        if (state === 'idle' || state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; }
+        else if (state === 'playing') {
+          state = 'paused';
+          if (trailActive) trailPausedRemaining = Math.max(0, trailEndTime - performance.now());
         }
-
-        const animation = new Animation(layout, audio);
-
-        // Mute toggle wiring
-        const muteBtn = document.getElementById("muteToggle");
-        if (audio && muteBtn) {
-          const updateMuteUI = () => {
-            const muted = audio.isMuted();
-            muteBtn.textContent = muted ? "🔇" : "🔊";
-            muteBtn.setAttribute("aria-pressed", String(muted));
-            muteBtn.setAttribute(
-              "aria-label",
-              muted ? "Unmute sound" : "Mute sound",
-            );
-          };
-          updateMuteUI();
-          muteBtn.addEventListener("click", () => {
-            audio.toggleMute();
-            updateMuteUI();
-          });
-        } else if (muteBtn) {
-          muteBtn.style.display = "none";
+        else if (state === 'paused') {
+          state = 'playing';
+          if (trailActive) trailEndTime = performance.now() + trailPausedRemaining;
         }
+        syncMusicToState();
+      }
+
+      // Speed: + = faster, - = slower (keyboard and numpad)
+      if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd')      setSpeed(speedMultiplier + 0.1);
+      if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract') setSpeed(speedMultiplier - 0.1);
+
+      // / key cycles to next music track
+      if (e.key === '/') changeTrack(1);
+
+      // 5 key toggles music
+      if (e.key === '5' || e.code === 'Numpad5') {
+        const btn = document.getElementById('music-toggle');
+        musicOn = !musicOn;
+        btn.textContent = musicOn ? '♪ MUSIC: ON' : '♪ MUSIC: OFF';
+        btn.classList.toggle('music-on', musicOn);
+        audioCtx.resume();
+        syncMusicToState();
+      }
+    });
+
+    document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+    document.getElementById('speed-down').addEventListener('click', () => setSpeed(speedMultiplier - 0.1));
+    document.getElementById('speed-up').addEventListener('click',   () => setSpeed(speedMultiplier + 0.1));
+    document.getElementById('trail-length').addEventListener('input', e => {
+      trailMaxLength = parseInt(e.target.value);
+    });
+
+    // ─── Game logic ───────────────────────────────────────────────────────────
+    function resetGame() {
+      applyNextBackground();
+      player.score = 0; ai.score = 0;
+      document.getElementById('score-player').textContent = 0;
+      document.getElementById('score-ai').textContent = 0;
+      player.y = H / 2 - PADDLE_H / 2;
+      ai.y     = H / 2 - PADDLE_H / 2;
+      mouseY   = H / 2;
+      playerBullets = []; aiBullets = [];
+      aiHoles = []; playerHoles = [];
+      trailActive = false; trailEnabled = false; ballTrail = [];
+      scheduleNextAIShot();
+      scheduleNextTrail();
+      launchBall();
+    }
+
+    function scheduleNextTrail() {
+      nextTrailTime = performance.now() + 10000 + Math.random() * 30000;
+    }
+
+    function scheduleNextAIShot() {
+      nextAIShot = performance.now() + AI_SHOT_MIN + Math.random() * (AI_SHOT_MAX - AI_SHOT_MIN);
+    }
+
+    function launchBall(towardAI = Math.random() < 0.5) {
+      ball.x = W / 2; ball.y = H / 2; ball.speed = 5;
+      const angle = Math.random() * 0.6 - 0.3;
+      ball.vx = ball.speed * (towardAI ? 1 : -1) * Math.cos(angle);
+      ball.vy = ball.speed * Math.sin(angle);
+      ballTrail = [];
+    }
+
+    function addHole(holesArr, paddle, hitY) {
+      if (holesArr.length >= MAX_HOLES) return;
+      const relY = hitY - paddle.y;
+      if (!holesArr.some(h => Math.abs(h - relY) < HOLE_SIZE + 2)) {
+        holesArr.push(relY);
+        if (holesArr.length >= MAX_HOLES) {
+          // Paddle destroyed — other team wins
+          const who = paddle === player ? 'CPU' : 'YOU';
+          state = 'win';
+          winnerText = who === 'YOU' ? 'YOU WIN!' : 'CPU WINS!';
+          syncMusicToState();
+        }
+      }
+    }
+
+    function isHole(holesArr, paddle, testY) {
+      return holesArr.some(relY => {
+        const absY = paddle.y + relY;
+        return testY >= absY - HOLE_SIZE / 2 && testY <= absY + HOLE_SIZE / 2;
       });
-    </script>
-  </body>
+    }
+
+    function updateTrail() {
+      const now = performance.now();
+      if (!trailActive && now >= nextTrailTime) {
+        trailActive = true; trailEnabled = true;
+        trailEndTime = now + TRAIL_DURATION;
+        if (musicOn && state === 'playing') {
+          stopMusic();
+          preFrenzyTrackIdx = currentTrackIdx;
+          useFrenzyMusic = true;
+          startMusic();
+        }
+      }
+      if (trailActive && now >= trailEndTime) {
+        trailActive = false; trailEnabled = false;
+        ballTrail = []; scheduleNextTrail();
+        if (musicOn && state === 'playing') {
+          stopMusic();
+          useFrenzyMusic = false;
+          currentTrackIdx = preFrenzyTrackIdx;
+          startMusic();
+        }
+      }
+    }
+
+    function updatePlayer() {
+      const kUp   = keys['ArrowUp']   || keys['8'] === true && false || e_num8();
+      const kDown = keys['ArrowDown'] || e_num2();
+
+      if (kUp || kDown) {
+        if (kUp)   player.y -= KEY_PADDLE_SPEED;
+        if (kDown) player.y += KEY_PADDLE_SPEED;
+        // Sync mouseY so switching back to mouse is seamless
+        mouseY = player.y + PADDLE_H / 2;
+      } else {
+        player.y = mouseY - PADDLE_H / 2;
+      }
+      player.y = Math.max(0, Math.min(H - PADDLE_H, player.y));
+    }
+
+    // Numpad key checks via e.code stored in keys-by-code map
+    const codeKeys = {};
+    document.addEventListener('keydown', e => { codeKeys[e.code] = true; });
+    document.addEventListener('keyup',   e => { codeKeys[e.code] = false; });
+
+    const e_num8 = () => codeKeys['Numpad8'];
+    const e_num2 = () => codeKeys['Numpad2'];
+    const e_num6 = () => codeKeys['Numpad6'];
+    const e_num4 = () => codeKeys['Numpad4'];
+
+    // Rewrite updatePlayer cleanly now that codeKeys is defined
+    // (overwrite previous definition)
+    window._updatePlayer = function() {
+      const kUp   = keys['ArrowUp']   || codeKeys['Numpad8'];
+      const kDown = keys['ArrowDown'] || codeKeys['Numpad2'];
+
+      if (kUp || kDown) {
+        if (kUp)   player.y -= KEY_PADDLE_SPEED;
+        if (kDown) player.y += KEY_PADDLE_SPEED;
+        mouseY = player.y + PADDLE_H / 2;
+      } else {
+        player.y = mouseY - PADDLE_H / 2;
+      }
+      player.y = Math.max(0, Math.min(H - PADDLE_H, player.y));
+    };
+
+    function updateAI() {
+      const center = ai.y + PADDLE_H / 2;
+      const diff = ball.y - center;
+      const reaction = 0.08 + 0.04 * (Math.abs(ball.x - ai.x) / W);
+      ai.y += diff * reaction;
+      ai.y = Math.max(0, Math.min(H - PADDLE_H, ai.y));
+    }
+
+    function tryPlayerShoot() {
+      if (!keys['ArrowRight'] && !codeKeys['Numpad6']) return;
+      const now = performance.now();
+      if (now - lastPlayerShot < SHOT_COOLDOWN) return;
+      lastPlayerShot = now;
+      playerBullets.push({ x: player.x + PADDLE_W + 2, y: player.y + PADDLE_H / 2 });
+      playShootSound();
+    }
+
+    function tryAIShoot() {
+      const now = performance.now();
+      if (now < nextAIShot) return;
+      scheduleNextAIShot();
+      aiBullets.push({ x: ai.x - 2, y: ai.y + PADDLE_H / 2 });
+      playShootSound();
+    }
+
+    function shieldActive() {
+      return keys['ArrowLeft'] || codeKeys['Numpad4'];
+    }
+
+    function updateBullets() {
+      const shield = shieldActive();
+      const shieldX = player.x + PADDLE_W + 2;
+
+      playerBullets = playerBullets.filter(b => {
+        b.x += BULLET_SPEED * speedMultiplier;
+        if (b.x > W) return false;
+        const inX = b.x + BULLET_R >= ai.x && b.x - BULLET_R <= ai.x + PADDLE_W;
+        const inY = b.y >= ai.y && b.y <= ai.y + PADDLE_H;
+        if (inX && inY) {
+          if (!isHole(aiHoles, ai, b.y)) { addHole(aiHoles, ai, b.y); playBulletHitSound(); }
+          return false;
+        }
+        return true;
+      });
+
+      aiBullets = aiBullets.filter(b => {
+        b.x -= BULLET_SPEED * speedMultiplier;
+        if (b.x < 0) return false;
+        if (shield) {
+          const inSX = b.x - BULLET_R <= shieldX + 8 && b.x + BULLET_R >= shieldX;
+          const inSY = b.y >= player.y && b.y <= player.y + PADDLE_H;
+          if (inSX && inSY) { playShieldBlockSound(); return false; }
+        }
+        const inX = b.x - BULLET_R <= player.x + PADDLE_W && b.x + BULLET_R >= player.x;
+        const inY = b.y >= player.y && b.y <= player.y + PADDLE_H;
+        if (inX && inY) {
+          if (!isHole(playerHoles, player, b.y)) { addHole(playerHoles, player, b.y); playBulletHitSound(); }
+          return false;
+        }
+        return true;
+      });
+    }
+
+    function collidesWithPaddle(paddle) {
+      if (!(ball.x - BALL_R < paddle.x + PADDLE_W && ball.x + BALL_R > paddle.x &&
+            ball.y + BALL_R > paddle.y && ball.y - BALL_R < paddle.y + PADDLE_H)) return false;
+      const holes = paddle === player ? playerHoles : aiHoles;
+      return !isHole(holes, paddle, ball.y);
+    }
+
+    function reflect(paddle) {
+      const hitPos = (ball.y - paddle.y) / PADDLE_H;
+      const angle  = (hitPos - 0.5) * Math.PI * 0.65;
+      ball.speed = Math.min(ball.speed + 0.3, 14);
+      const dir = paddle === player ? 1 : -1;
+      ball.vx = dir * ball.speed * Math.cos(angle);
+      ball.vy = ball.speed * Math.sin(angle);
+    }
+
+    function update() {
+      if (state !== 'playing') return;
+
+      updateTrail();
+      window._updatePlayer();
+      updateAI();
+      tryPlayerShoot();
+      tryAIShoot();
+      updateBullets();
+
+      const spd = speedMultiplier * (trailActive ? TRAIL_SPEED_MULT : 1);
+      ball.x += ball.vx * spd;
+      ball.y += ball.vy * spd;
+
+      if (trailEnabled) {
+        ballTrail.push({ x: ball.x, y: ball.y });
+        if (ballTrail.length > trailMaxLength) ballTrail.shift();
+      }
+
+      if (ball.y - BALL_R <= 0) { ball.y = BALL_R; ball.vy = Math.abs(ball.vy); playFloorCeilingSound(); }
+      if (ball.y + BALL_R >= H) { ball.y = H - BALL_R; ball.vy = -Math.abs(ball.vy); playFloorCeilingSound(); }
+
+      if (ball.vx < 0 && collidesWithPaddle(player)) {
+        ball.x = player.x + PADDLE_W + BALL_R; reflect(player); playPaddleSound();
+      }
+      if (ball.vx > 0 && collidesWithPaddle(ai)) {
+        ball.x = ai.x - BALL_R; reflect(ai); playPaddleSound();
+      }
+
+      if (ball.x - BALL_R < 0) {
+        ai.score += trailActive ? TRAIL_SCORE_MULT : 1;
+        document.getElementById('score-ai').textContent = ai.score;
+        checkWin('CPU');
+        if (state === 'playing') launchBall(false);
+      } else if (ball.x + BALL_R > W) {
+        player.score += trailActive ? TRAIL_SCORE_MULT : 1;
+        document.getElementById('score-player').textContent = player.score;
+        checkWin('YOU');
+        if (state === 'playing') launchBall(true);
+      }
+    }
+
+    function checkWin(who) {
+      const s = who === 'YOU' ? player.score : ai.score;
+      if (s >= WIN_SCORE) { state = 'win'; winnerText = who === 'YOU' ? 'YOU WIN!' : 'CPU WINS!'; syncMusicToState(); }
+    }
+
+    // ─── Drawing ──────────────────────────────────────────────────────────────
+    function drawDashedCenter() {
+      ctx.setLineDash([10, 14]);
+      ctx.strokeStyle = '#333'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function drawPaddleWithHoles(paddle, color, holes) {
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.roundRect(paddle.x, paddle.y, PADDLE_W, PADDLE_H, 4); ctx.fill();
+      ctx.fillStyle = '#111';
+      holes.forEach(relY => {
+        ctx.fillRect(paddle.x, paddle.y + relY - HOLE_SIZE / 2, PADDLE_W, HOLE_SIZE);
+      });
+    }
+
+    function drawShield() {
+      if (!shieldActive()) return;
+      const sx = player.x + PADDLE_W + 3;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(100,200,255,0.75)'; ctx.lineWidth = 5;
+      ctx.shadowColor = '#4af'; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.moveTo(sx, player.y - 6); ctx.lineTo(sx, player.y + PADDLE_H + 6);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawBullets() {
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = '#ff0'; ctx.shadowColor = '#ff0';
+      playerBullets.forEach(b => { ctx.beginPath(); ctx.arc(b.x,b.y,BULLET_R,0,Math.PI*2); ctx.fill(); });
+      ctx.fillStyle = '#f60'; ctx.shadowColor = '#f60';
+      aiBullets.forEach(b => { ctx.beginPath(); ctx.arc(b.x,b.y,BULLET_R,0,Math.PI*2); ctx.fill(); });
+      ctx.shadowBlur = 0;
+    }
+
+    function drawBall() {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI*2); ctx.fill();
+    }
+
+    function drawTrail() {
+      if (!trailEnabled || ballTrail.length === 0) return;
+      const hues = ['#f00','#f80','#ff0','#0f0','#08f','#80f','#f0f'];
+      for (let i = 0; i < ballTrail.length; i++) {
+        const p = ballTrail[i];
+        const progress = i / ballTrail.length;
+        ctx.fillStyle = hues[Math.floor(progress * hues.length) % hues.length];
+        ctx.globalAlpha = 0.65 * progress;
+        ctx.beginPath(); ctx.arc(p.x, p.y, BALL_R * 0.7, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function updateFrenzyCounter() {
+      const el = document.getElementById('frenzy-counter');
+      if (!trailActive || state === 'win' || state === 'idle') {
+        el.style.visibility = 'hidden';
+        return;
+      }
+      const remaining = state === 'paused' ? trailPausedRemaining : trailEndTime - performance.now();
+      const secs = Math.max(0, Math.ceil(remaining / 1000));
+      const hue = (performance.now() / 20) % 360;
+      el.style.visibility = 'visible';
+      el.style.color = `hsl(${hue}, 100%, 65%)`;
+      el.textContent = `★ RAINBOW FRENZY ★\n        ${secs}s`;
+    }
+
+    function drawTrailBanner() {
+      if (!trailActive) return;
+      const secs = Math.ceil((trailEndTime - performance.now()) / 1000);
+      const msg = `★ RAINBOW FRENZY!  x${TRAIL_SCORE_MULT} SCORE  x${TRAIL_SPEED_MULT} SPEED  ${secs}s ★`;
+      const pulse = 0.75 + 0.25 * Math.sin(performance.now() / 140);
+      ctx.save(); ctx.globalAlpha = pulse;
+      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, 26);
+      ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'center';
+      const rainbow = ['#f00','#f80','#ff0','#0f0','#08f','#a0f'];
+      let cx = W/2 - ctx.measureText(msg).width / 2;
+      msg.split('').forEach((ch, i) => {
+        ctx.fillStyle = rainbow[i % rainbow.length];
+        const cw = ctx.measureText(ch).width;
+        ctx.fillText(ch, cx + cw/2, 18);
+        cx += cw;
+      });
+      ctx.restore();
+    }
+
+    function drawOverlay(text, sub) {
+      ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 52px Courier New'; ctx.textAlign = 'center';
+      ctx.fillText(text, W/2, H/2 - 10);
+      ctx.font = '18px Courier New'; ctx.fillStyle = '#aaa';
+      ctx.fillText(sub, W/2, H/2 + 34);
+    }
+
+    function draw() {
+      if (trailActive) {
+        const hue = (performance.now() / 25) % 360;
+        document.body.style.backgroundColor = `hsl(${hue}, 90%, 15%)`;
+      } else {
+        document.body.style.backgroundColor = bgImages.length ? 'transparent' : '#111';
+      }
+      ctx.fillStyle = '#111'; ctx.fillRect(0, 0, W, H);
+      drawDashedCenter();
+      drawPaddleWithHoles(player, '#4af', playerHoles);
+      drawPaddleWithHoles(ai, '#f74', aiHoles);
+      drawShield();
+      updateFrenzyCounter();
+      if (state !== 'idle') { drawTrail(); drawBall(); drawBullets(); drawTrailBanner(); }
+      if (state === 'idle')   drawOverlay('PONG', 'SPACE or Click to start');
+      else if (state === 'paused') drawOverlay('PAUSED', 'Press SPACE to resume');
+      else if (state === 'win')    drawOverlay(winnerText, 'SPACE or Click to play again');
+    }
+
+    function loop() { update(); draw(); requestAnimationFrame(loop); }
+    loop();
+  </script>
+</body>
 </html>
