@@ -8,3 +8,6 @@ the background image
 bullets and sheild
 - sheild should be temporary and be crackling electricity with sound
 - bullets should be more like little lines, not balls
+
+rainbow frenzy
+- the r.f. music should be for r.f. only
