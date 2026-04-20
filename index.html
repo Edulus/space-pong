@@ -120,12 +120,13 @@
   <script>
     // ─── Background images (NASA APOD) ───────────────────────────────────────
     const APOD_API_KEY = 'Fek6QhTkzvPLLA22pXlm1mJh5IRQTMq0ZwOsfzZN';
-    const APOD_COUNT   = 15;         // images fetched per session
-    const BG_CYCLE_MS  = 90000;
+    const APOD_COUNT   = 15;
+    const BG_CYCLE_MS  = 30000;
 
-    let bgImages = []; // display URLs
-    let bgMeta   = []; // parallel: { title, copyright } — stored, not yet displayed
+    let bgImages = [];
+    let bgMeta   = []; // { title, copyright } — stored for future use
     let bgIndex  = 0;
+    let bgCycleInterval = null;
 
     function applyBackground() {
       if (!bgImages.length) return;
@@ -139,15 +140,19 @@
     function applyNextBackground() {} // no-op stub — resetGame calls this safely
 
     function startBgCycle() {
+      if (bgCycleInterval) clearInterval(bgCycleInterval); // cancel any prior cycle
       bgIndex = Math.floor(Math.random() * bgImages.length);
       applyBackground();
-      setInterval(() => {
+      bgCycleInterval = setInterval(() => {
         bgIndex = (bgIndex + 1) % bgImages.length;
         applyBackground();
       }, BG_CYCLE_MS);
     }
 
-    function fallbackToLocalImages() {
+    // Load local images immediately so the background is visible on first render.
+    // onComplete fires once all local files are discovered (or none found).
+    function loadLocalImages(onComplete) {
+      bgImages = []; bgMeta = [];
       (function discoverLocal(n) {
         const img = new Image();
         img.onload = () => {
@@ -155,11 +160,17 @@
           bgMeta.push({ title: '', copyright: '' });
           discoverLocal(n + 1);
         };
-        img.onerror = () => { if (bgImages.length) startBgCycle(); };
+        img.onerror = () => { if (onComplete) onComplete(); };
         img.src = `backgrounds/background_${n}.jpg`;
       })(1);
     }
 
+    // Step 1 — show local images immediately
+    loadLocalImages(() => {
+      if (bgImages.length) startBgCycle();
+    });
+
+    // Step 2 — fetch NASA APOD in parallel; swap in if successful
     const APOD_URL = `https://api.nasa.gov/planetary/apod?api_key=${APOD_API_KEY}&count=${APOD_COUNT}`;
     console.log('[APOD] Fetching:', APOD_URL);
 
@@ -172,18 +183,16 @@
         return r.json();
       })
       .then(data => {
-        console.log('[APOD] Raw response entries:', data.length);
         const images = data.filter(e => e.media_type === 'image');
-        console.log('[APOD] Image entries after filter:', images.length);
         if (!images.length) throw new Error('APOD batch contained no images');
         bgImages = images.map(e => e.url);
         bgMeta   = images.map(e => ({ title: e.title || '', copyright: e.copyright || '' }));
-        console.log('[APOD] Backgrounds loaded:', bgImages.length, bgImages);
-        startBgCycle();
+        console.log('[APOD] Switched to NASA images:', bgImages.length);
+        startBgCycle(); // replaces local cycle
       })
       .catch(err => {
-        console.error('[APOD] Fetch failed, falling back to local images. Reason:', err.message);
-        fallbackToLocalImages();
+        console.error('[APOD] Fetch failed, keeping local images. Reason:', err.message);
+        // local images are already loaded and cycling — nothing to do
       });
 
     const canvas = document.getElementById('c');
@@ -366,6 +375,7 @@
 
     let mouseY = H / 2;
     let winnerText = '';
+    let winReason  = '';
 
     function setSpeed(v) {
       speedMultiplier = Math.min(2.0, Math.max(0.5, parseFloat(v.toFixed(1))));
@@ -469,6 +479,7 @@
           const who = paddle === player ? 'CPU' : 'YOU';
           state = 'win';
           winnerText = who === 'YOU' ? 'YOU WIN!' : 'CPU WINS!';
+          winReason  = who === 'YOU' ? 'CPU paddle destroyed by bullets' : 'Your paddle was shot to pieces';
           syncMusicToState();
         }
       }
@@ -669,7 +680,12 @@
 
     function checkWin(who) {
       const s = who === 'YOU' ? player.score : ai.score;
-      if (s >= WIN_SCORE) { state = 'win'; winnerText = who === 'YOU' ? 'YOU WIN!' : 'CPU WINS!'; syncMusicToState(); }
+      if (s >= WIN_SCORE) {
+        state = 'win';
+        winnerText = who === 'YOU' ? 'YOU WIN!' : 'CPU WINS!';
+        winReason  = `First to ${WIN_SCORE} points`;
+        syncMusicToState();
+      }
     }
 
     // ─── Drawing ──────────────────────────────────────────────────────────────
@@ -760,12 +776,16 @@
       ctx.restore();
     }
 
-    function drawOverlay(text, sub) {
+    function drawOverlay(text, sub, reason) {
       ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 0, W, H);
       ctx.fillStyle = '#fff'; ctx.font = 'bold 52px Courier New'; ctx.textAlign = 'center';
-      ctx.fillText(text, W/2, H/2 - 10);
+      ctx.fillText(text, W/2, H/2 - 20);
+      if (reason) {
+        ctx.font = 'italic 16px Courier New'; ctx.fillStyle = '#fc8';
+        ctx.fillText(reason, W/2, H/2 + 18);
+      }
       ctx.font = '18px Courier New'; ctx.fillStyle = '#aaa';
-      ctx.fillText(sub, W/2, H/2 + 34);
+      ctx.fillText(sub, W/2, H/2 + (reason ? 50 : 34));
     }
 
     function draw() {
@@ -775,7 +795,8 @@
       } else {
         document.body.style.backgroundColor = bgImages.length ? 'transparent' : '#111';
       }
-      ctx.fillStyle = '#111'; ctx.fillRect(0, 0, W, H);
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = 'rgba(17,17,17,0.85)'; ctx.fillRect(0, 0, W, H);
       drawDashedCenter();
       drawPaddleWithHoles(player, '#4af', playerHoles);
       drawPaddleWithHoles(ai, '#f74', aiHoles);
@@ -784,7 +805,7 @@
       if (state !== 'idle') { drawTrail(); drawBall(); drawBullets(); drawTrailBanner(); }
       if (state === 'idle')   drawOverlay('PONG', 'SPACE or Click to start');
       else if (state === 'paused') drawOverlay('PAUSED', 'Press SPACE to resume');
-      else if (state === 'win')    drawOverlay(winnerText, 'SPACE or Click to play again');
+      else if (state === 'win')    drawOverlay(winnerText, 'SPACE or Click to play again', winReason);
     }
 
     function loop() { update(); draw(); requestAnimationFrame(loop); }
