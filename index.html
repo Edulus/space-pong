@@ -118,11 +118,13 @@
   </div>
 
   <script>
-    // ─── Background images ────────────────────────────────────────────────────
-    // Place files named backgrounds/background_1.jpg, background_2.jpg, etc.
-    // The game will auto-discover however many exist and cycle every 90 seconds.
-    const BG_CYCLE_MS = 90000;
-    let bgImages = [];
+    // ─── Background images (NASA APOD) ───────────────────────────────────────
+    const APOD_API_KEY = 'Fek6QhTkzvPLLA22pXlm1mJh5IRQTMq0ZwOsfzZN';
+    const APOD_COUNT   = 15;         // images fetched per session
+    const BG_CYCLE_MS  = 90000;
+
+    let bgImages = []; // display URLs
+    let bgMeta   = []; // parallel: { title, copyright } — stored, not yet displayed
     let bgIndex  = 0;
 
     function applyBackground() {
@@ -134,25 +136,55 @@
       s.backgroundRepeat   = 'no-repeat';
     }
 
-    function applyNextBackground() {} // kept so resetGame call is harmless
+    function applyNextBackground() {} // no-op stub — resetGame calls this safely
 
-    (function discoverBackgrounds(n) {
-      const img = new Image();
-      img.onload = () => {
-        bgImages.push(`backgrounds/background_${n}.jpg`);
-        discoverBackgrounds(n + 1);
-      };
-      img.onerror = () => {
-        if (!bgImages.length) return;
-        bgIndex = Math.floor(Math.random() * bgImages.length);
+    function startBgCycle() {
+      bgIndex = Math.floor(Math.random() * bgImages.length);
+      applyBackground();
+      setInterval(() => {
+        bgIndex = (bgIndex + 1) % bgImages.length;
         applyBackground();
-        setInterval(() => {
-          bgIndex = (bgIndex + 1) % bgImages.length;
-          applyBackground();
-        }, BG_CYCLE_MS);
-      };
-      img.src = `backgrounds/background_${n}.jpg`;
-    })(1);
+      }, BG_CYCLE_MS);
+    }
+
+    function fallbackToLocalImages() {
+      (function discoverLocal(n) {
+        const img = new Image();
+        img.onload = () => {
+          bgImages.push(`backgrounds/background_${n}.jpg`);
+          bgMeta.push({ title: '', copyright: '' });
+          discoverLocal(n + 1);
+        };
+        img.onerror = () => { if (bgImages.length) startBgCycle(); };
+        img.src = `backgrounds/background_${n}.jpg`;
+      })(1);
+    }
+
+    const APOD_URL = `https://api.nasa.gov/planetary/apod?api_key=${APOD_API_KEY}&count=${APOD_COUNT}`;
+    console.log('[APOD] Fetching:', APOD_URL);
+
+    fetch(APOD_URL)
+      .then(r => {
+        console.log('[APOD] HTTP status:', r.status, r.statusText);
+        if (!r.ok) {
+          return r.text().then(body => { throw new Error(`APOD HTTP ${r.status}: ${body}`); });
+        }
+        return r.json();
+      })
+      .then(data => {
+        console.log('[APOD] Raw response entries:', data.length);
+        const images = data.filter(e => e.media_type === 'image');
+        console.log('[APOD] Image entries after filter:', images.length);
+        if (!images.length) throw new Error('APOD batch contained no images');
+        bgImages = images.map(e => e.url);
+        bgMeta   = images.map(e => ({ title: e.title || '', copyright: e.copyright || '' }));
+        console.log('[APOD] Backgrounds loaded:', bgImages.length, bgImages);
+        startBgCycle();
+      })
+      .catch(err => {
+        console.error('[APOD] Fetch failed, falling back to local images. Reason:', err.message);
+        fallbackToLocalImages();
+      });
 
     const canvas = document.getElementById('c');
     const ctx = canvas.getContext('2d');
