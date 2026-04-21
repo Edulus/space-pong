@@ -382,7 +382,6 @@
     const BASE = 'https://www.fesliyanstudios.com/download-link.php?src=i&id=';
     const tracks = [
       { name: 'Feels Good',             id: 417  },
-      { name: 'Shire Girl',             id: 1466 },
       { name: 'Emotion',                id: 458  },
       { name: 'Silly Feet',             id: 394  },
       { name: 'Beating Heart',          id: 392  },
@@ -401,16 +400,48 @@
       { name: 'Shake It Up',            id: 524  },
       { name: 'Let Go',                 id: 432  },
       { name: 'Pyromania Normal',       id: 2917 },
+      { name: 'JPOP',                   id: 1726 },
+      { name: '8 Bit Surf',             id: 568  },
+      { name: 'Fight Club',             id: 391  },
+      { name: 'Jump Around',            id: 396  },
+      { name: 'Head Bang',              id: 409  },
+      { name: 'Land of 8 Bits',         id: 288  },
     ];
     const frenzyTrackMeta = { name: 'Pyromania', id: 2921 };
 
     const audio = new Audio();
-    audio.loop = true;
     audio.volume = 0.9;
 
     let useFrenzyMusic = false;
-    let preFrenzyTrackIdx = 0;
-    let currentTrackIdx = Math.floor(Math.random() * tracks.length);
+    let preFrenzyQueueIdx = 0;
+
+    // Shuffled queue — cycles through every track before repeating any
+    let trackQueue = [];
+    let trackQueueIdx = 0;
+
+    function buildTrackQueue(avoidIdx) {
+      trackQueue = Array.from({ length: tracks.length }, (_, i) => i);
+      for (let i = trackQueue.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [trackQueue[i], trackQueue[j]] = [trackQueue[j], trackQueue[i]];
+      }
+      if (avoidIdx !== undefined && trackQueue[0] === avoidIdx && trackQueue.length > 1)
+        [trackQueue[0], trackQueue[1]] = [trackQueue[1], trackQueue[0]];
+      trackQueueIdx = 0;
+    }
+
+    buildTrackQueue();
+    let currentTrackIdx = trackQueue[0];
+
+    audio.addEventListener('ended', () => {
+      if (useFrenzyMusic) { audio.play().catch(() => {}); return; }
+      const last = trackQueue[trackQueueIdx];
+      trackQueueIdx++;
+      if (trackQueueIdx >= trackQueue.length) buildTrackQueue(last);
+      currentTrackIdx = trackQueue[trackQueueIdx];
+      setTrackSrc();
+      audio.play().catch(() => {});
+    });
 
     function setTrackSrc() {
       const meta = useFrenzyMusic ? frenzyTrackMeta : tracks[currentTrackIdx];
@@ -518,7 +549,7 @@
       playerBullets = []; aiBullets = [];
       aiHoles = []; playerHoles = [];
       trailActive = false; trailEnabled = false; ballTrail = [];
-      useFrenzyMusic = false; currentTrackIdx = Math.floor(Math.random() * tracks.length);
+      useFrenzyMusic = false; buildTrackQueue(); currentTrackIdx = trackQueue[0];
       scheduleNextAIShot();
       scheduleNextTrail();
       launchBall();
@@ -570,7 +601,7 @@
         trailEndTime = now + TRAIL_DURATION;
         if (state === 'playing') {
           stopMusic();
-          preFrenzyTrackIdx = currentTrackIdx;
+          preFrenzyQueueIdx = trackQueueIdx;
           useFrenzyMusic = true;
           startMusic();
         }
@@ -581,7 +612,8 @@
         if (state === 'playing') {
           stopMusic();
           useFrenzyMusic = false;
-          currentTrackIdx = preFrenzyTrackIdx;
+          trackQueueIdx = preFrenzyQueueIdx;
+          currentTrackIdx = trackQueue[trackQueueIdx];
           startMusic();
         }
       }
