@@ -24,9 +24,10 @@
       display: flex;
       align-items: center;
       width: 804px;
+      height: 72px;
+      flex-shrink: 0;
       font-size: 48px;
       font-weight: bold;
-      margin-bottom: 6px;
       letter-spacing: 4px;
     }
     #score-player { flex: 1; text-align: center; }
@@ -34,10 +35,12 @@
     #label-row {
       display: flex;
       width: 804px;
+      height: 26px;
+      flex-shrink: 0;
+      align-items: flex-start;
       font-size: 12px;
       letter-spacing: 2px;
       color: #bbb;
-      margin-bottom: 12px;
     }
     #label-player { flex: 1; text-align: center; }
     #label-spacer  { flex: 1; }
@@ -45,9 +48,11 @@
     #frenzy-row {
       display: flex;
       width: 804px;
-      margin-bottom: 4px;
+      height: 32px;
+      flex-shrink: 0;
+      align-items: center;
+      overflow: hidden;
       position: relative; z-index: 3;
-      min-height: 1.6em;
     }
     #frenzy-left, #frenzy-right {
       flex: 1;
