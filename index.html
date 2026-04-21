@@ -79,12 +79,19 @@
       position: fixed; inset: 0;
       z-index: 2; pointer-events: none; opacity: 0;
     }
-    #scoreboard, #label-row, canvas, #controls, #keys-help, #now-playing-label {
+    #scoreboard, #label-row, #canvas-wrapper, #controls, #keys-help, #now-playing-label {
       position: relative; z-index: 3;
     }
+    #canvas-wrapper { width: 804px; height: 504px; flex-shrink: 0; }
+    #scrawl-canvas  { position: absolute; top: -14px; left: -14px; pointer-events: none; z-index: 4; }
     canvas { border: 2px solid #555; cursor: none; }
     #now-playing-center {
       flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    #frenzy-countdown {
+      font-size: 20px; font-weight: bold; color: #ff4; letter-spacing: 3px;
+      visibility: hidden;
+      text-shadow: 0 1px 6px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,0.9);
     }
     #now-playing-label {
       font-size: 16px; color: #ccc; letter-spacing: 2px;
@@ -101,7 +108,7 @@
     #now-playing::after  { content: ' ♪'; }
     .label { color: #aaa; font-size: 11px; letter-spacing: 1px; }
     #keys-help {
-      margin-top: 7px; font-size: 15px; color: #bbb; letter-spacing: 1px;
+      margin-top: 30px; font-size: 15px; color: #bbb; letter-spacing: 1px;
       background: rgba(0,0,0,0.5); padding: 4px 12px; border-radius: 4px;
     }
   </style>
@@ -113,6 +120,7 @@
   <div id="scoreboard">
     <span id="score-player">0</span>
     <div id="now-playing-center">
+      <div id="frenzy-countdown"></div>
       <div id="now-playing-label">Now Playing:</div>
       <div id="now-playing">♪ — ♪</div>
     </div>
@@ -127,7 +135,10 @@
     <div id="frenzy-left"></div>
     <div id="frenzy-right"></div>
   </div>
-  <canvas id="c"></canvas>
+  <div id="canvas-wrapper">
+    <canvas id="c"></canvas>
+    <canvas id="scrawl-canvas" width="832" height="532"></canvas>
+  </div>
   <div id="keys-help">SHIELD: ← or 4 &nbsp;|&nbsp; SHOOT: → or 6 &nbsp;|&nbsp; PAUSE: Space Bar &nbsp;|&nbsp; FASTER: + &nbsp;|&nbsp; SLOWER: -</div>
 
   <script>
@@ -239,9 +250,13 @@
     const W = 800, H = 500;
     canvas.width = W; canvas.height = H;
 
+    const scrawlEl = document.getElementById('scrawl-canvas');
+    const sctx = scrawlEl.getContext('2d');
+    const SW = 832, SH = 532, SG = 14; // scrawl canvas dims and gutter size
+
     const PADDLE_W = 12, PADDLE_H = 90, BALL_R = 8;
     const KEY_PADDLE_SPEED = 11;
-    const WIN_SCORE = 67;
+    const WIN_SCORE = 99;
     const BULLET_R = 4, BULLET_SPEED = 9;
     const HOLE_SIZE = 14, MAX_HOLES = 5;
     const SHOT_COOLDOWN = 700;
@@ -923,74 +938,61 @@
     }
 
     function updateFrenzyCounter() {
-      const left  = document.getElementById('frenzy-left');
-      const right = document.getElementById('frenzy-right');
+      const left     = document.getElementById('frenzy-left');
+      const right    = document.getElementById('frenzy-right');
+      const countdown = document.getElementById('frenzy-countdown');
+      left.style.visibility = 'hidden'; left.innerHTML = '';
+      right.style.visibility = 'hidden'; right.innerHTML = '';
       if (!trailActive || state === 'win' || state === 'idle') {
-        left.style.visibility = 'hidden';
-        right.style.visibility = 'hidden';
-        left.innerHTML = '';
-        right.innerHTML = '';
+        countdown.style.visibility = 'hidden';
         return;
       }
       const remaining = state === 'paused' ? trailPausedRemaining : trailEndTime - performance.now();
       const secs = Math.max(0, Math.ceil(remaining / 1000));
-      const hueShift = (performance.now() / 20) % 360;
-      const rainbow = ['#f00','#f80','#ff0','#0f0','#08f','#a0f'];
-
-      function colorize(str, offset) {
-        return str.split('').map((ch, i) =>
-          `<span style="color:${rainbow[(i + offset) % rainbow.length]}">${ch === ' ' ? '&nbsp;' : ch}</span>`
-        ).join('');
-      }
-
-      const colorOffset = Math.floor(hueShift / 60);
-      left.style.visibility = 'visible';
-      left.innerHTML = colorize(`\u2605 RAINBOW FRENZY \u2605`, colorOffset);
-      right.style.visibility = 'hidden';
-      right.innerHTML = '';
+      countdown.style.visibility = 'visible';
+      countdown.textContent = `⚡ ${secs}s ⚡`;
     }
 
     function drawFrenzyEdgeText() {
+      sctx.clearRect(0, 0, SW, SH);
       if (!trailActive || state === 'win' || state === 'idle') return;
 
-      const remaining = state === 'paused' ? trailPausedRemaining : trailEndTime - performance.now();
-      const secs = Math.max(0, Math.ceil(remaining / 1000));
-      const text = `x${TRAIL_SCORE_MULT} SCORE  x${TRAIL_SPEED_MULT} SPEED  ${secs}s`;
+      const text = `\u2605 RAINBOW FRENZY !! \u2605   x${TRAIL_SCORE_MULT} SCORE   x${TRAIL_SPEED_MULT} SPEED`;
 
-      const perimeter = 2 * (W + H);
+      const perimeter = 2 * (SW + SH);
       if (state === 'playing') frenzyTextPerimPos = (frenzyTextPerimPos + 3.5) % perimeter;
 
       const d = frenzyTextPerimPos;
-      const pad = 13;
+      const gc = SG / 2; // gutter center offset from edge
       let px, py, angle;
-      if      (d < W)         { px = d;           py = pad;       angle = 0; }
-      else if (d < W + H)     { px = W - pad;     py = d - W;     angle = Math.PI / 2; }
-      else if (d < 2*W + H)   { px = W-(d-W-H);   py = H - pad;   angle = Math.PI; }
-      else                    { px = pad;          py = H-(d-2*W-H); angle = -Math.PI / 2; }
+      if      (d < SW)          { px = d;              py = gc;           angle = 0; }
+      else if (d < SW + SH)     { px = SW - gc;        py = d - SW;       angle = Math.PI / 2; }
+      else if (d < 2*SW + SH)   { px = SW-(d-SW-SH);   py = SH - gc;      angle = Math.PI; }
+      else                      { px = gc;              py = SH-(d-2*SW-SH); angle = -Math.PI / 2; }
 
       const rainbow = ['#f00','#f80','#ff0','#0f0','#08f','#a0f'];
       const colorOffset = Math.floor((performance.now() / 20) % 360 / 60);
 
-      ctx.save();
-      ctx.translate(px, py);
-      ctx.rotate(angle);
-      ctx.font = 'bold 14px Courier New';
-      ctx.textBaseline = 'middle';
+      sctx.save();
+      sctx.translate(px, py);
+      sctx.rotate(angle);
+      sctx.font = 'bold 13px Courier New';
+      sctx.textBaseline = 'middle';
 
       const chars = text.split('');
-      const widths = chars.map(ch => ctx.measureText(ch).width);
+      const widths = chars.map(ch => sctx.measureText(ch).width);
       const totalW = widths.reduce((a, b) => a + b, 0);
 
       let cx = -totalW / 2;
       chars.forEach((ch, i) => {
-        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-        ctx.lineWidth = 3;
-        ctx.fillStyle = rainbow[(i + colorOffset) % rainbow.length];
-        ctx.strokeText(ch, cx, 0);
-        ctx.fillText(ch, cx, 0);
+        sctx.strokeStyle = 'rgba(0,0,0,0.9)';
+        sctx.lineWidth = 3;
+        sctx.fillStyle = rainbow[(i + colorOffset) % rainbow.length];
+        sctx.strokeText(ch, cx, 0);
+        sctx.fillText(ch, cx, 0);
         cx += widths[i];
       });
-      ctx.restore();
+      sctx.restore();
     }
 
     function drawOverlay(text, sub, reason) {
