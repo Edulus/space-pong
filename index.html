@@ -73,13 +73,16 @@
       position: fixed; inset: 0;
       z-index: 2; pointer-events: none; opacity: 0;
     }
-    #scoreboard, #label-row, canvas, #msg, #controls, #keys-help {
+    #scoreboard, #label-row, canvas, #controls, #keys-help, #now-playing-label {
       position: relative; z-index: 3;
     }
     canvas { border: 2px solid #555; cursor: none; }
-    #msg { margin-top: 14px; font-size: 13px; color: #ddd; letter-spacing: 1px; }
+    #now-playing-label {
+      margin-top: 10px; font-size: 13px; color: #aaa; letter-spacing: 2px;
+      text-align: center; text-transform: uppercase;
+    }
     #now-playing {
-      flex: 1; font-size: 28px; color: #ddd; letter-spacing: 1px;
+      flex: 1; font-size: 34px; color: #ddd; letter-spacing: 1px;
       text-align: center; font-family: 'Fredoka One', cursive;
       text-shadow: 0 1px 6px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,0.9);
     }
@@ -109,7 +112,7 @@
     <div id="frenzy-right"></div>
   </div>
   <canvas id="c"></canvas>
-  <div id="msg">SPACE or click to start &nbsp;|&nbsp; Mouse or ↑↓ / Num8·2 to move paddle</div>
+  <div id="now-playing-label">Now Playing:</div>
   <div id="keys-help">← or 4 SHIELD &nbsp;|&nbsp; → or 6 SHOOT &nbsp;|&nbsp; SPACE Pause &nbsp;|&nbsp; +/= Speed up &nbsp;|&nbsp; -/_ Slow down</div>
 
   <script>
