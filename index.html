@@ -479,6 +479,7 @@
     let state = 'idle';
     let speedMultiplier = 1.0;
     let trailEnabled = false;
+    let frenzyTextPerimPos = 0;
     let shieldIsOn      = false;
     let shieldEndTime   = 0;
     let shieldReadyTime = 0;
@@ -945,8 +946,51 @@
       const colorOffset = Math.floor(hueShift / 60);
       left.style.visibility = 'visible';
       left.innerHTML = colorize(`\u2605 RAINBOW FRENZY \u2605`, colorOffset);
-      right.style.visibility = 'visible';
-      right.innerHTML = colorize(`x${TRAIL_SCORE_MULT} SCORE \u00a0 x${TRAIL_SPEED_MULT} SPEED \u00a0 ${secs}s`, colorOffset + 3);
+      right.style.visibility = 'hidden';
+      right.innerHTML = '';
+    }
+
+    function drawFrenzyEdgeText() {
+      if (!trailActive || state === 'win' || state === 'idle') return;
+
+      const remaining = state === 'paused' ? trailPausedRemaining : trailEndTime - performance.now();
+      const secs = Math.max(0, Math.ceil(remaining / 1000));
+      const text = `x${TRAIL_SCORE_MULT} SCORE  x${TRAIL_SPEED_MULT} SPEED  ${secs}s`;
+
+      const perimeter = 2 * (W + H);
+      if (state === 'playing') frenzyTextPerimPos = (frenzyTextPerimPos + 3.5) % perimeter;
+
+      const d = frenzyTextPerimPos;
+      const pad = 13;
+      let px, py, angle;
+      if      (d < W)         { px = d;           py = pad;       angle = 0; }
+      else if (d < W + H)     { px = W - pad;     py = d - W;     angle = Math.PI / 2; }
+      else if (d < 2*W + H)   { px = W-(d-W-H);   py = H - pad;   angle = Math.PI; }
+      else                    { px = pad;          py = H-(d-2*W-H); angle = -Math.PI / 2; }
+
+      const rainbow = ['#f00','#f80','#ff0','#0f0','#08f','#a0f'];
+      const colorOffset = Math.floor((performance.now() / 20) % 360 / 60);
+
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(angle);
+      ctx.font = 'bold 14px Courier New';
+      ctx.textBaseline = 'middle';
+
+      const chars = text.split('');
+      const widths = chars.map(ch => ctx.measureText(ch).width);
+      const totalW = widths.reduce((a, b) => a + b, 0);
+
+      let cx = -totalW / 2;
+      chars.forEach((ch, i) => {
+        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+        ctx.lineWidth = 3;
+        ctx.fillStyle = rainbow[(i + colorOffset) % rainbow.length];
+        ctx.strokeText(ch, cx, 0);
+        ctx.fillText(ch, cx, 0);
+        cx += widths[i];
+      });
+      ctx.restore();
     }
 
     function drawOverlay(text, sub, reason) {
@@ -979,6 +1023,7 @@
       drawShieldCrackle();
       updateFrenzyCounter();
       if (state !== 'idle') { drawTrail(); drawBall(); drawBullets(); }
+      drawFrenzyEdgeText();
       if (state === 'idle')   drawOverlay('SPACE PONG', 'SPACE or Click to start');
       else if (state === 'paused') drawOverlay('PAUSED', 'Press SPACE to resume');
       else if (state === 'win')    drawOverlay(winnerText, 'SPACE or Click to play again', winReason);
