@@ -460,9 +460,9 @@
 
     function syncMusicToState() {
       if (state === 'playing') {
-        if (audio.paused) startMusic();
+        if (audio.paused) audio.play().catch(() => {});
       } else {
-        stopMusic();
+        audio.pause();
         stopShieldSound();
       }
     }
@@ -505,7 +505,7 @@
     });
 
     canvas.addEventListener('click', () => {
-      if (state === 'idle' || state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; syncMusicToState(); }
+      if (state === 'idle' || state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; startMusic(); }
     });
 
     document.addEventListener('keydown', e => {
@@ -514,7 +514,7 @@
       if ([...arrows, ' '].includes(e.key)) e.preventDefault();
 
       if (e.key === ' ') {
-        if (state === 'idle' || state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; }
+        if (state === 'idle' || state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; startMusic(); }
         else if (state === 'playing') {
           state = 'paused';
           stopShieldSound(); shieldIsOn = false;
