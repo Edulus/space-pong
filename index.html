@@ -245,7 +245,7 @@
     const AI_SHOT_MIN = 2500, AI_SHOT_MAX = 5000;
     const SHIELD_MAX_MS      = 5000;
     const SHIELD_RECHARGE_MS = 20000;
-    const TRAIL_DURATION = 30000;
+    const TRAIL_DURATION = 20000;
     const TRAIL_SPEED_MULT = 3, TRAIL_SCORE_MULT = 3;
 
     // ─── Audio context ────────────────────────────────────────────────────────
@@ -451,7 +451,16 @@
 
     function startMusic() {
       setTrackSrc();
-      audio.play().catch(() => {});
+      if (useFrenzyMusic) {
+        audio.addEventListener('loadedmetadata', function seekAndPlay() {
+          audio.removeEventListener('loadedmetadata', seekAndPlay);
+          const safeDuration = Math.max(0, audio.duration - 20);
+          audio.currentTime = Math.random() * safeDuration;
+          audio.play().catch(() => {});
+        });
+      } else {
+        audio.play().catch(() => {});
+      }
     }
 
     function stopMusic() {
