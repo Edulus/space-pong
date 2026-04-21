@@ -451,16 +451,12 @@
 
     function startMusic() {
       setTrackSrc();
-      if (useFrenzyMusic) {
-        audio.addEventListener('loadedmetadata', function seekAndPlay() {
-          audio.removeEventListener('loadedmetadata', seekAndPlay);
-          const safeDuration = Math.max(0, audio.duration - 20);
-          audio.currentTime = Math.random() * safeDuration;
-          audio.play().catch(() => {});
-        });
-      } else {
+      audio.addEventListener('loadedmetadata', function seekAndPlay() {
+        audio.removeEventListener('loadedmetadata', seekAndPlay);
+        const safeDuration = Math.max(0, audio.duration - 20);
+        if (safeDuration > 0) audio.currentTime = Math.random() * safeDuration;
         audio.play().catch(() => {});
-      }
+      });
     }
 
     function stopMusic() {
@@ -621,7 +617,8 @@
         if (state === 'playing') {
           stopMusic();
           useFrenzyMusic = false;
-          trackQueueIdx = preFrenzyQueueIdx;
+          trackQueueIdx = preFrenzyQueueIdx + 1;
+          if (trackQueueIdx >= trackQueue.length) buildTrackQueue(trackQueue[preFrenzyQueueIdx]);
           currentTrackIdx = trackQueue[trackQueueIdx];
           startMusic();
         }
