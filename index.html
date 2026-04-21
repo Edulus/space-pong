@@ -41,16 +41,21 @@
     }
     #label-player { flex: 1; text-align: center; }
     #label-ai     { flex: 1; text-align: center; }
-    #frenzy-counter {
-      flex: 0 0 300px;
-      font-size: 34px;
+    #frenzy-row {
+      display: flex;
+      width: 804px;
+      margin-bottom: 4px;
+      position: relative; z-index: 3;
+      min-height: 1.6em;
+    }
+    #frenzy-left, #frenzy-right {
+      flex: 1;
+      font-size: 22px;
       font-weight: bold;
       letter-spacing: 1px;
-      line-height: 1.5;
       text-align: center;
       visibility: hidden;
     }
-    #frenzy-gap { flex: 0 0 300px; }
     @keyframes kenBurns {
       from { transform: scale(1.0); }
       to   { transform: scale(1.1); }
@@ -73,10 +78,9 @@
     canvas { border: 2px solid #555; cursor: none; }
     #msg { margin-top: 14px; font-size: 13px; color: #ddd; letter-spacing: 1px; }
     #now-playing {
-      margin-top: 10px; font-size: 32px; color: #ddd; letter-spacing: 2px;
+      flex: 1; font-size: 22px; color: #ddd; letter-spacing: 1px;
       text-align: center; font-family: 'Fredoka One', cursive;
       text-shadow: 0 1px 6px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,0.9);
-      position: relative; z-index: 3;
     }
     .label { color: #aaa; font-size: 11px; letter-spacing: 1px; }
     #keys-help {
@@ -91,19 +95,20 @@
   <div id="frenzy-overlay"></div>
   <div id="scoreboard">
     <span id="score-player">0</span>
-    <div id="frenzy-counter"></div>
+    <div id="now-playing">♪ — ♪</div>
     <span id="score-ai">0</span>
   </div>
   <div id="label-row">
     <span id="label-player">YOU</span>
-    <div id="frenzy-gap"></div>
     <span id="label-ai">CPU</span>
+  </div>
+  <div id="frenzy-row">
+    <div id="frenzy-left"></div>
+    <div id="frenzy-right"></div>
   </div>
   <canvas id="c"></canvas>
   <div id="msg">SPACE or click to start &nbsp;|&nbsp; Mouse or ↑↓ / Num8·2 to move paddle</div>
   <div id="keys-help">← or 4 SHIELD &nbsp;|&nbsp; → or 6 SHOOT &nbsp;|&nbsp; SPACE Pause &nbsp;|&nbsp; +/= Speed up &nbsp;|&nbsp; -/_ Slow down</div>
-
-  <div id="now-playing">♪ — ♪</div>
 
   <script>
     // ─── Background images (NASA APOD) ───────────────────────────────────────
@@ -856,10 +861,13 @@
     }
 
     function updateFrenzyCounter() {
-      const el = document.getElementById('frenzy-counter');
+      const left  = document.getElementById('frenzy-left');
+      const right = document.getElementById('frenzy-right');
       if (!trailActive || state === 'win' || state === 'idle') {
-        el.style.visibility = 'hidden';
-        el.innerHTML = '';
+        left.style.visibility = 'hidden';
+        right.style.visibility = 'hidden';
+        left.innerHTML = '';
+        right.innerHTML = '';
         return;
       }
       const remaining = state === 'paused' ? trailPausedRemaining : trailEndTime - performance.now();
@@ -873,12 +881,11 @@
         ).join('');
       }
 
-      const line1 = `\u2605 RAINBOW FRENZY \u2605`;
-      const line2 = `x${TRAIL_SCORE_MULT} SCORE \u00a0 x${TRAIL_SPEED_MULT} SPEED \u00a0 ${secs}s`;
       const colorOffset = Math.floor(hueShift / 60);
-
-      el.style.visibility = 'visible';
-      el.innerHTML = colorize(line1, colorOffset) + '<br>' + colorize(line2, colorOffset + 3);
+      left.style.visibility = 'visible';
+      left.innerHTML = colorize(`\u2605 RAINBOW FRENZY \u2605`, colorOffset);
+      right.style.visibility = 'visible';
+      right.innerHTML = colorize(`x${TRAIL_SCORE_MULT} SCORE \u00a0 x${TRAIL_SPEED_MULT} SPEED \u00a0 ${secs}s`, colorOffset + 3);
     }
 
     function drawOverlay(text, sub, reason) {
