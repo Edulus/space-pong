@@ -158,16 +158,28 @@
     // Build the full list, shuffle it, and start immediately — no sequential probing.
     // Change LOCAL_BG_COUNT above if the number of background files changes.
     function loadLocalImages() {
-      bgImages = Array.from({ length: LOCAL_BG_COUNT },
-                            (_, i) => `backgrounds/background_${i + 1}.jpg`);
-      bgMeta   = bgImages.map(() => ({ title: '', copyright: '' }));
-      // Fisher-Yates shuffle for random order every session
-      for (let i = bgImages.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [bgImages[i], bgImages[j]] = [bgImages[j], bgImages[i]];
-        [bgMeta[i],   bgMeta[j]]   = [bgMeta[j],   bgMeta[i]];
+      const candidates = Array.from({ length: LOCAL_BG_COUNT },
+                                    (_, i) => `backgrounds/background_${i + 1}.jpg`);
+      let remaining = candidates.length;
+      const loaded = [];
+      candidates.forEach(url => {
+        const img = new Image();
+        img.onload  = () => { loaded.push(url); finalize(); };
+        img.onerror = () => {                    finalize(); };
+        img.src = url;
+      });
+      function finalize() {
+        if (--remaining > 0) return;
+        bgImages = loaded;
+        bgMeta   = bgImages.map(() => ({ title: '', copyright: '' }));
+        // Fisher-Yates shuffle for random order every session
+        for (let i = bgImages.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [bgImages[i], bgImages[j]] = [bgImages[j], bgImages[i]];
+          [bgMeta[i],   bgMeta[j]]   = [bgMeta[j],   bgMeta[i]];
+        }
+        if (bgImages.length) startBgCycle();
       }
-      startBgCycle();
     }
 
     loadLocalImages();
