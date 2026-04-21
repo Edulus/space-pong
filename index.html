@@ -95,7 +95,10 @@
       font-size: 34px; color: #ddd; letter-spacing: 1px;
       text-align: center; font-family: 'Fredoka One', cursive;
       text-shadow: 0 1px 6px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,0.9);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    #now-playing::before { content: '♪ '; }
+    #now-playing::after  { content: ' ♪'; }
     .label { color: #aaa; font-size: 11px; letter-spacing: 1px; }
     #keys-help {
       margin-top: 7px; font-size: 11px; color: #bbb; letter-spacing: 1px;
@@ -446,7 +449,7 @@
     function setTrackSrc() {
       const meta = useFrenzyMusic ? frenzyTrackMeta : tracks[currentTrackIdx];
       audio.src = BASE + meta.id;
-      document.getElementById('now-playing').textContent = `♪ ${meta.name} ♪`;
+      document.getElementById('now-playing').textContent = meta.name;
     }
 
     function startMusic() {
