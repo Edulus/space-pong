@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Pong</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -39,43 +42,42 @@
     #label-player { flex: 1; text-align: center; }
     #label-ai     { flex: 1; text-align: center; }
     #frenzy-counter {
-      flex: 0 0 220px;
-      font-size: 20px;
+      flex: 0 0 300px;
+      font-size: 34px;
       font-weight: bold;
-      letter-spacing: 2px;
-      line-height: 1.4;
+      letter-spacing: 1px;
+      line-height: 1.5;
       text-align: center;
       visibility: hidden;
-      white-space: pre;
     }
-    #frenzy-gap { flex: 0 0 220px; }
+    #frenzy-gap { flex: 0 0 300px; }
+    @keyframes kenBurns {
+      from { transform: scale(1.0); }
+      to   { transform: scale(1.1); }
+    }
+    .bg-layer {
+      position: fixed; inset: 0;
+      background-size: 100% 100%; background-position: center; background-repeat: no-repeat;
+      transition: opacity 3s ease;
+      z-index: 1; pointer-events: none; opacity: 0;
+      transform-origin: center center;
+      will-change: transform, opacity;
+    }
+    #frenzy-overlay {
+      position: fixed; inset: 0;
+      z-index: 2; pointer-events: none; opacity: 0;
+    }
+    #scoreboard, #label-row, canvas, #msg, #controls, #keys-help {
+      position: relative; z-index: 3;
+    }
     canvas { border: 2px solid #555; cursor: none; }
     #msg { margin-top: 14px; font-size: 13px; color: #ddd; letter-spacing: 1px; }
-    #controls {
-      margin-top: 12px;
-      display: flex;
-      gap: 24px;
-      align-items: center;
-      font-size: 13px;
-      background: rgba(0,0,0,0.65);
-      padding: 10px 18px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.08);
+    #now-playing {
+      margin-top: 10px; font-size: 32px; color: #ddd; letter-spacing: 2px;
+      text-align: center; font-family: 'Fredoka One', cursive;
+      text-shadow: 0 1px 6px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,0.9);
+      position: relative; z-index: 3;
     }
-    .control-group { display: flex; gap: 8px; align-items: center; }
-    button {
-      background: rgba(40,40,40,0.9); color: #fff; border: 1px solid #666;
-      padding: 6px 12px; cursor: pointer; border-radius: 4px;
-      font-family: 'Courier New', monospace; font-size: 12px;
-      transition: background 0.15s, border-color 0.15s;
-      text-shadow: none;
-    }
-    button:hover { background: rgba(70,70,70,0.95); border-color: #888; }
-    button.active { background: #4af; color: #000; border-color: #4af; }
-    button.music-on { background: #a4f; color: #000; border-color: #a4f; }
-    #speed-display { color: #ccc; min-width: 40px; text-align: center; }
-    #track-name { color: #aaa; font-size: 11px; min-width: 140px; }
-    input[type="range"] { width: 110px; height: 6px; cursor: pointer; accent-color: #4af; }
     .label { color: #aaa; font-size: 11px; letter-spacing: 1px; }
     #keys-help {
       margin-top: 7px; font-size: 11px; color: #bbb; letter-spacing: 1px;
@@ -84,6 +86,9 @@
   </style>
 </head>
 <body>
+  <div id="bg-a" class="bg-layer"></div>
+  <div id="bg-b" class="bg-layer"></div>
+  <div id="frenzy-overlay"></div>
   <div id="scoreboard">
     <span id="score-player">0</span>
     <div id="frenzy-counter"></div>
@@ -96,26 +101,9 @@
   </div>
   <canvas id="c"></canvas>
   <div id="msg">SPACE or click to start &nbsp;|&nbsp; Mouse or ↑↓ / Num8·2 to move paddle</div>
-  <div id="keys-help">← or 4 SHIELD &nbsp;|&nbsp; → or 6 SHOOT &nbsp;|&nbsp; SPACE Pause &nbsp;|&nbsp; +/= Speed up &nbsp;|&nbsp; -/_ Slow down &nbsp;|&nbsp; / Next track</div>
+  <div id="keys-help">← or 4 SHIELD &nbsp;|&nbsp; → or 6 SHOOT &nbsp;|&nbsp; SPACE Pause &nbsp;|&nbsp; +/= Speed up &nbsp;|&nbsp; -/_ Slow down</div>
 
-  <div id="controls">
-    <div class="control-group">
-      <span class="label">SPEED:</span>
-      <button id="speed-down">−</button>
-      <span id="speed-display">1.0x</span>
-      <button id="speed-up">+</button>
-    </div>
-    <div class="control-group">
-      <span class="label">TRAIL LEN:</span>
-      <input type="range" id="trail-length" min="5" max="100" value="30">
-    </div>
-    <div class="control-group">
-      <button id="music-toggle" class="music-on">♪ MUSIC: ON</button>
-      <button id="music-prev">◀</button>
-      <span id="track-name">—</span>
-      <button id="music-next">▶</button>
-    </div>
-  </div>
+  <div id="now-playing">♪ — ♪</div>
 
   <script>
     // ─── Background images (NASA APOD) ───────────────────────────────────────
@@ -128,53 +116,67 @@
     let bgIndex  = 0;
     let bgCycleInterval = null;
 
-    function applyBackground() {
-      if (!bgImages.length) return;
-      const s = document.body.style;
-      s.backgroundImage    = `url('${bgImages[bgIndex]}')`;
-      s.backgroundSize     = '100% 100%';
-      s.backgroundPosition = 'center';
-      s.backgroundRepeat   = 'no-repeat';
-    }
+    const bgA = document.getElementById('bg-a');
+    const bgB = document.getElementById('bg-b');
+    const frenzyOverlay = document.getElementById('frenzy-overlay');
+    let activeBg = bgA; // currently visible layer
 
     function applyNextBackground() {} // no-op stub — resetGame calls this safely
 
+    function restartZoom(el) {
+      el.style.animation = 'none';
+      el.offsetHeight; // force reflow so the browser resets the animation
+      el.style.animation = 'kenBurns 32s linear forwards';
+    }
+
+    function crossfadeTo(url) {
+      const incoming = activeBg === bgA ? bgB : bgA;
+      incoming.style.backgroundImage = `url('${url}')`;
+      restartZoom(incoming);
+      incoming.style.opacity = '1';
+      activeBg.style.opacity = '0';
+      activeBg = incoming;
+    }
+
     function startBgCycle() {
-      if (bgCycleInterval) clearInterval(bgCycleInterval); // cancel any prior cycle
+      if (bgCycleInterval) clearInterval(bgCycleInterval);
       bgIndex = Math.floor(Math.random() * bgImages.length);
-      applyBackground();
+      activeBg = bgA;
+      bgB.style.opacity = '0';
+      bgA.style.backgroundImage = `url('${bgImages[bgIndex]}')`;
+      restartZoom(bgA);
+      bgA.style.opacity = '1';
       bgCycleInterval = setInterval(() => {
         bgIndex = (bgIndex + 1) % bgImages.length;
-        applyBackground();
+        crossfadeTo(bgImages[bgIndex]);
       }, BG_CYCLE_MS);
     }
 
-    // Load local images immediately so the background is visible on first render.
-    // onComplete fires once all local files are discovered (or none found).
-    function loadLocalImages(onComplete) {
-      bgImages = []; bgMeta = [];
-      (function discoverLocal(n) {
-        const img = new Image();
-        img.onload = () => {
-          bgImages.push(`backgrounds/background_${n}.jpg`);
-          bgMeta.push({ title: '', copyright: '' });
-          discoverLocal(n + 1);
-        };
-        img.onerror = () => { if (onComplete) onComplete(); };
-        img.src = `backgrounds/background_${n}.jpg`;
-      })(1);
+    const LOCAL_BG_COUNT = 105; // update if you add or remove images
+    const APOD_ENABLED   = false; // ← set to true to re-enable NASA API backgrounds
+
+    // Build the full list, shuffle it, and start immediately — no sequential probing.
+    // Change LOCAL_BG_COUNT above if the number of background files changes.
+    function loadLocalImages() {
+      bgImages = Array.from({ length: LOCAL_BG_COUNT },
+                            (_, i) => `backgrounds/background_${i + 1}.jpg`);
+      bgMeta   = bgImages.map(() => ({ title: '', copyright: '' }));
+      // Fisher-Yates shuffle for random order every session
+      for (let i = bgImages.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [bgImages[i], bgImages[j]] = [bgImages[j], bgImages[i]];
+        [bgMeta[i],   bgMeta[j]]   = [bgMeta[j],   bgMeta[i]];
+      }
+      startBgCycle();
     }
 
-    // Step 1 — show local images immediately
-    loadLocalImages(() => {
-      if (bgImages.length) startBgCycle();
-    });
+    loadLocalImages();
 
     // Step 2 — fetch NASA APOD in parallel; swap in if successful
     const APOD_URL = `https://api.nasa.gov/planetary/apod?api_key=${APOD_API_KEY}&count=${APOD_COUNT}`;
-    console.log('[APOD] Fetching:', APOD_URL);
+    if (APOD_ENABLED) console.log('[APOD] Fetching:', APOD_URL);
 
-    fetch(APOD_URL)
+    if (APOD_ENABLED) fetch(APOD_URL)
       .then(r => {
         console.log('[APOD] HTTP status:', r.status, r.statusText);
         if (!r.ok) {
@@ -188,11 +190,11 @@
         bgImages = images.map(e => e.url);
         bgMeta   = images.map(e => ({ title: e.title || '', copyright: e.copyright || '' }));
         console.log('[APOD] Switched to NASA images:', bgImages.length);
-        startBgCycle(); // replaces local cycle
+        startBgCycle(); // crossfades into first NASA image
       })
       .catch(err => {
         console.error('[APOD] Fetch failed, keeping local images. Reason:', err.message);
-        // local images are already loaded and cycling — nothing to do
+        // local images already loaded and cycling — nothing to do
       });
 
     const canvas = document.getElementById('c');
@@ -207,6 +209,8 @@
     const HOLE_SIZE = 14, MAX_HOLES = 5;
     const SHOT_COOLDOWN = 700;
     const AI_SHOT_MIN = 2500, AI_SHOT_MAX = 5000;
+    const SHIELD_MAX_MS      = 5000;
+    const SHIELD_RECHARGE_MS = 20000;
     const TRAIL_DURATION = 30000;
     const TRAIL_SPEED_MULT = 3, TRAIL_SCORE_MULT = 3;
 
@@ -240,14 +244,41 @@
 
     function playShootSound() {
       const t = audioCtx.currentTime;
-      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-      o.connect(g); g.connect(audioCtx.destination);
-      o.type = 'sawtooth';
-      o.frequency.setValueAtTime(900, t);
-      o.frequency.exponentialRampToValueAtTime(300, t + 0.1);
-      g.gain.setValueAtTime(0.12, t);
-      g.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
-      o.start(t); o.stop(t + 0.1);
+
+      // Bass thump — the physical punch
+      const o1 = audioCtx.createOscillator(), g1 = audioCtx.createGain();
+      o1.type = 'sine';
+      o1.frequency.setValueAtTime(180, t);
+      o1.frequency.exponentialRampToValueAtTime(38, t + 0.2);
+      g1.gain.setValueAtTime(0.75, t);
+      g1.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+      o1.connect(g1); g1.connect(audioCtx.destination);
+      o1.start(t); o1.stop(t + 0.22);
+
+      // Zap layer — descending sawtooth for the "shot" character
+      const o2 = audioCtx.createOscillator(), g2 = audioCtx.createGain();
+      o2.type = 'sawtooth';
+      o2.frequency.setValueAtTime(820, t);
+      o2.frequency.exponentialRampToValueAtTime(140, t + 0.14);
+      g2.gain.setValueAtTime(0.35, t);
+      g2.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+      o2.connect(g2); g2.connect(audioCtx.destination);
+      o2.start(t); o2.stop(t + 0.16);
+
+      // Noise crack — sharp attack transient on the front edge
+      const bufLen = Math.ceil(audioCtx.sampleRate * 0.055);
+      const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buf;
+      const bpf = audioCtx.createBiquadFilter();
+      bpf.type = 'bandpass'; bpf.frequency.value = 2200; bpf.Q.value = 0.9;
+      const g3 = audioCtx.createGain();
+      g3.gain.setValueAtTime(0.55, t);
+      g3.gain.exponentialRampToValueAtTime(0.001, t + 0.055);
+      noise.connect(bpf); bpf.connect(g3); g3.connect(audioCtx.destination);
+      noise.start(t); noise.stop(t + 0.06);
     }
 
     function playBulletHitSound() {
@@ -261,6 +292,43 @@
         g.gain.exponentialRampToValueAtTime(0.01, t + i * 0.04 + 0.06);
         o.start(t + i * 0.04); o.stop(t + i * 0.04 + 0.06);
       }
+    }
+
+    // ─── Shield sound (continuous crackle while active) ──────────────────────
+    let shieldSoundNodes = null;
+
+    function startShieldSound() {
+      if (shieldSoundNodes) return;
+      const bufLen = audioCtx.sampleRate; // 1-second looping noise
+      const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buf; noise.loop = true;
+      // Two bandpass layers for electrical texture
+      const bpf1 = audioCtx.createBiquadFilter();
+      bpf1.type = 'bandpass'; bpf1.frequency.value = 2500; bpf1.Q.value = 4;
+      const bpf2 = audioCtx.createBiquadFilter();
+      bpf2.type = 'bandpass'; bpf2.frequency.value = 900;  bpf2.Q.value = 2;
+      const g1 = audioCtx.createGain(); g1.gain.value = 0.22;
+      const g2 = audioCtx.createGain(); g2.gain.value = 0.12;
+      const master = audioCtx.createGain(); master.gain.value = 1.0;
+      // Square-wave LFO at 45 Hz — makes noise stutter into a crackle
+      const lfo = audioCtx.createOscillator();
+      lfo.type = 'square'; lfo.frequency.value = 45;
+      const lfoG = audioCtx.createGain(); lfoG.gain.value = 0.22;
+      lfo.connect(lfoG); lfoG.connect(master.gain);
+      noise.connect(bpf1); bpf1.connect(g1); g1.connect(master);
+      noise.connect(bpf2); bpf2.connect(g2); g2.connect(master);
+      master.connect(audioCtx.destination);
+      noise.start(); lfo.start();
+      shieldSoundNodes = { noise, lfo };
+    }
+
+    function stopShieldSound() {
+      if (!shieldSoundNodes) return;
+      try { shieldSoundNodes.noise.stop(); shieldSoundNodes.lfo.stop(); } catch(e) {}
+      shieldSoundNodes = null;
     }
 
     function playShieldBlockSound() {
@@ -298,14 +366,14 @@
       { name: 'ShakaLaka',              id: 582  },
       { name: 'Shake It Up',            id: 524  },
       { name: 'Let Go',                 id: 432  },
+      { name: 'Pyromania Normal',       id: 2917 },
     ];
-    const frenzyTrackMeta = { name: 'Pyromania', id: 2917 };
+    const frenzyTrackMeta = { name: 'Pyromania', id: 2921 };
 
     const audio = new Audio();
     audio.loop = true;
     audio.volume = 0.9;
 
-    let musicOn = true;
     let useFrenzyMusic = false;
     let preFrenzyTrackIdx = 0;
     let currentTrackIdx = Math.floor(Math.random() * tracks.length);
@@ -313,7 +381,7 @@
     function setTrackSrc() {
       const meta = useFrenzyMusic ? frenzyTrackMeta : tracks[currentTrackIdx];
       audio.src = BASE + meta.id;
-      document.getElementById('track-name').textContent = meta.name;
+      document.getElementById('now-playing').textContent = `♪ ${meta.name} ♪`;
     }
 
     function startMusic() {
@@ -325,39 +393,23 @@
       audio.pause();
     }
 
-    function changeTrack(dir) {
-      currentTrackIdx = (currentTrackIdx + dir + tracks.length) % tracks.length;
-      if (musicOn && state === 'playing' && !useFrenzyMusic) {
-        setTrackSrc();
-        audio.play().catch(() => {});
-      } else {
-        document.getElementById('track-name').textContent = tracks[currentTrackIdx].name;
-      }
-    }
-
     function syncMusicToState() {
-      if (musicOn && state === 'playing') {
+      if (state === 'playing') {
         if (audio.paused) startMusic();
       } else {
         stopMusic();
+        stopShieldSound();
       }
     }
-
-    document.getElementById('music-toggle').addEventListener('click', e => {
-      musicOn = !musicOn;
-      e.target.textContent = musicOn ? '♪ MUSIC: ON' : '♪ MUSIC: OFF';
-      e.target.classList.toggle('music-on', musicOn);
-      audioCtx.resume();
-      syncMusicToState();
-    });
-    document.getElementById('music-prev').addEventListener('click', () => changeTrack(-1));
-    document.getElementById('music-next').addEventListener('click', () => changeTrack(1));
 
     // ─── State ────────────────────────────────────────────────────────────────
     let state = 'idle';
     let speedMultiplier = 1.0;
     let trailEnabled = false;
-    let trailMaxLength = 30;
+    let shieldIsOn      = false;
+    let shieldEndTime   = 0;
+    let shieldReadyTime = 0;
+    const trailMaxLength = 100;
     let ballTrail = [];
     let trailActive = false, trailEndTime = 0, nextTrailTime = 0;
     let trailPausedRemaining = 0; // ms remaining when game was paused
@@ -379,7 +431,6 @@
 
     function setSpeed(v) {
       speedMultiplier = Math.min(2.0, Math.max(0.5, parseFloat(v.toFixed(1))));
-      document.getElementById('speed-display').textContent = speedMultiplier.toFixed(1) + 'x';
     }
 
     // ─── Input ────────────────────────────────────────────────────────────────
@@ -401,6 +452,7 @@
         if (state === 'idle' || state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; }
         else if (state === 'playing') {
           state = 'paused';
+          stopShieldSound(); shieldIsOn = false;
           if (trailActive) trailPausedRemaining = Math.max(0, trailEndTime - performance.now());
         }
         else if (state === 'paused') {
@@ -414,30 +466,14 @@
       if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd')      setSpeed(speedMultiplier + 0.1);
       if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract') setSpeed(speedMultiplier - 0.1);
 
-      // / key cycles to next music track
-      if (e.key === '/') changeTrack(1);
-
-      // 5 key toggles music
-      if (e.key === '5' || e.code === 'Numpad5') {
-        const btn = document.getElementById('music-toggle');
-        musicOn = !musicOn;
-        btn.textContent = musicOn ? '♪ MUSIC: ON' : '♪ MUSIC: OFF';
-        btn.classList.toggle('music-on', musicOn);
-        audioCtx.resume();
-        syncMusicToState();
-      }
     });
 
     document.addEventListener('keyup', e => { keys[e.key] = false; });
 
-    document.getElementById('speed-down').addEventListener('click', () => setSpeed(speedMultiplier - 0.1));
-    document.getElementById('speed-up').addEventListener('click',   () => setSpeed(speedMultiplier + 0.1));
-    document.getElementById('trail-length').addEventListener('input', e => {
-      trailMaxLength = parseInt(e.target.value);
-    });
 
     // ─── Game logic ───────────────────────────────────────────────────────────
     function resetGame() {
+      stopShieldSound(); shieldIsOn = false; shieldEndTime = 0; shieldReadyTime = 0;
       applyNextBackground();
       player.score = 0; ai.score = 0;
       document.getElementById('score-player').textContent = 0;
@@ -448,6 +484,7 @@
       playerBullets = []; aiBullets = [];
       aiHoles = []; playerHoles = [];
       trailActive = false; trailEnabled = false; ballTrail = [];
+      useFrenzyMusic = false; currentTrackIdx = Math.floor(Math.random() * tracks.length);
       scheduleNextAIShot();
       scheduleNextTrail();
       launchBall();
@@ -497,7 +534,7 @@
       if (!trailActive && now >= nextTrailTime) {
         trailActive = true; trailEnabled = true;
         trailEndTime = now + TRAIL_DURATION;
-        if (musicOn && state === 'playing') {
+        if (state === 'playing') {
           stopMusic();
           preFrenzyTrackIdx = currentTrackIdx;
           useFrenzyMusic = true;
@@ -507,7 +544,7 @@
       if (trailActive && now >= trailEndTime) {
         trailActive = false; trailEnabled = false;
         ballTrail = []; scheduleNextTrail();
-        if (musicOn && state === 'playing') {
+        if (state === 'playing') {
           stopMusic();
           useFrenzyMusic = false;
           currentTrackIdx = preFrenzyTrackIdx;
@@ -582,12 +619,20 @@
       playShootSound();
     }
 
-    function shieldActive() {
-      return keys['ArrowLeft'] || codeKeys['Numpad4'];
+    function updateShieldState() {
+      const now  = performance.now();
+      const wants = keys['ArrowLeft'] || codeKeys['Numpad4'];
+      const canActivate = now >= shieldReadyTime;
+      const wasOn = shieldIsOn;
+      // Arm a new activation window when key is first pressed and cooldown is done
+      if (wants && canActivate && !wasOn) shieldEndTime = now + SHIELD_MAX_MS;
+      shieldIsOn = wants && canActivate && now < shieldEndTime;
+      if (wasOn && !shieldIsOn) { shieldReadyTime = now + SHIELD_RECHARGE_MS; stopShieldSound(); }
+      if (!wasOn &&  shieldIsOn) startShieldSound();
     }
 
     function updateBullets() {
-      const shield = shieldActive();
+      const shield = shieldIsOn;
       const shieldX = player.x + PADDLE_W + 2;
 
       playerBullets = playerBullets.filter(b => {
@@ -642,6 +687,7 @@
       updateTrail();
       window._updatePlayer();
       updateAI();
+      updateShieldState();
       tryPlayerShoot();
       tryAIShoot();
       updateBullets();
@@ -705,14 +751,68 @@
       });
     }
 
-    function drawShield() {
-      if (!shieldActive()) return;
-      const sx = player.x + PADDLE_W + 3;
+    function drawShieldCrackle() {
+      if (!shieldIsOn) return;
+      const faceX = player.x + PADDLE_W;
+      const py = player.y, ph = PADDLE_H, px = player.x;
       ctx.save();
-      ctx.strokeStyle = 'rgba(100,200,255,0.75)'; ctx.lineWidth = 5;
-      ctx.shadowColor = '#4af'; ctx.shadowBlur = 12;
-      ctx.beginPath(); ctx.moveTo(sx, player.y - 6); ctx.lineTo(sx, player.y + PADDLE_H + 6);
-      ctx.stroke();
+
+      // Glow halo along the opponent-facing edge
+      const grd = ctx.createLinearGradient(faceX, 0, faceX + 20, 0);
+      grd.addColorStop(0, 'rgba(80,200,255,0.55)');
+      grd.addColorStop(1, 'rgba(80,200,255,0)');
+      ctx.fillStyle = grd; ctx.shadowColor = '#4df'; ctx.shadowBlur = 22;
+      ctx.fillRect(faceX, py - 6, 20, ph + 12);
+
+      // Jagged lightning bolts projecting toward opponent
+      const numBolts = 5 + Math.floor(Math.random() * 5);
+      for (let i = 0; i < numBolts; i++) {
+        const startY = py + Math.random() * ph;
+        const reach  = 10 + Math.random() * 24;
+        const segs   = 2 + Math.floor(Math.random() * 3);
+        const bright = Math.random() < 0.55;
+        ctx.strokeStyle = bright ? 'rgba(210,245,255,0.95)' : 'rgba(80,190,255,0.72)';
+        ctx.lineWidth   = bright ? 1.6 : 0.8;
+        ctx.shadowColor = '#4df'; ctx.shadowBlur = bright ? 12 : 5;
+        ctx.beginPath(); ctx.moveTo(faceX, startY);
+        let cx = faceX;
+        for (let s = 0; s < segs; s++) {
+          cx += reach / segs;
+          ctx.lineTo(cx, startY + (Math.random() - 0.5) * 16);
+        }
+        ctx.stroke();
+      }
+
+      // Sparks — heavy on the face side, lighter on top/bottom/back edges
+      const sparkCount = 7 + Math.floor(Math.random() * 7);
+      for (let i = 0; i < sparkCount; i++) {
+        const r = Math.random();
+        let sx, sy;
+        if (r < 0.55) {          // opponent-facing side
+          sx = faceX + Math.random() * 20;
+          sy = py + Math.random() * ph;
+        } else if (r < 0.75) {   // top / bottom edges
+          sx = px + Math.random() * (PADDLE_W + 8);
+          sy = (Math.random() < 0.5 ? py : py + ph) + (Math.random() - 0.5) * 5;
+        } else {                  // back edge (rare)
+          sx = px + (Math.random() - 0.5) * 5;
+          sy = py + Math.random() * ph;
+        }
+        ctx.fillStyle = Math.random() < 0.35 ? '#fff' : (Math.random() < 0.5 ? '#8ef' : '#acf');
+        ctx.shadowColor = '#4df'; ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 0.6 + Math.random() * 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Flickering edge lines along top and bottom of paddle
+      ctx.lineWidth = 1; ctx.shadowBlur = 5;
+      ctx.strokeStyle = `rgba(120,230,255,${0.35 + Math.random() * 0.45})`;
+      ctx.beginPath(); ctx.moveTo(px, py);
+      ctx.lineTo(faceX + 4 + Math.random() * 6, py + (Math.random() - 0.5) * 3); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(px, py + ph);
+      ctx.lineTo(faceX + 4 + Math.random() * 6, py + ph + (Math.random() - 0.5) * 3); ctx.stroke();
+
       ctx.restore();
     }
 
@@ -747,33 +847,26 @@
       const el = document.getElementById('frenzy-counter');
       if (!trailActive || state === 'win' || state === 'idle') {
         el.style.visibility = 'hidden';
+        el.innerHTML = '';
         return;
       }
       const remaining = state === 'paused' ? trailPausedRemaining : trailEndTime - performance.now();
       const secs = Math.max(0, Math.ceil(remaining / 1000));
-      const hue = (performance.now() / 20) % 360;
-      el.style.visibility = 'visible';
-      el.style.color = `hsl(${hue}, 100%, 65%)`;
-      el.textContent = `★ RAINBOW FRENZY ★\n        ${secs}s`;
-    }
-
-    function drawTrailBanner() {
-      if (!trailActive) return;
-      const secs = Math.ceil((trailEndTime - performance.now()) / 1000);
-      const msg = `★ RAINBOW FRENZY!  x${TRAIL_SCORE_MULT} SCORE  x${TRAIL_SPEED_MULT} SPEED  ${secs}s ★`;
-      const pulse = 0.75 + 0.25 * Math.sin(performance.now() / 140);
-      ctx.save(); ctx.globalAlpha = pulse;
-      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, 26);
-      ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'center';
+      const hueShift = (performance.now() / 20) % 360;
       const rainbow = ['#f00','#f80','#ff0','#0f0','#08f','#a0f'];
-      let cx = W/2 - ctx.measureText(msg).width / 2;
-      msg.split('').forEach((ch, i) => {
-        ctx.fillStyle = rainbow[i % rainbow.length];
-        const cw = ctx.measureText(ch).width;
-        ctx.fillText(ch, cx + cw/2, 18);
-        cx += cw;
-      });
-      ctx.restore();
+
+      function colorize(str, offset) {
+        return str.split('').map((ch, i) =>
+          `<span style="color:${rainbow[(i + offset) % rainbow.length]}">${ch === ' ' ? '&nbsp;' : ch}</span>`
+        ).join('');
+      }
+
+      const line1 = `\u2605 RAINBOW FRENZY \u2605`;
+      const line2 = `x${TRAIL_SCORE_MULT} SCORE \u00a0 x${TRAIL_SPEED_MULT} SPEED \u00a0 ${secs}s`;
+      const colorOffset = Math.floor(hueShift / 60);
+
+      el.style.visibility = 'visible';
+      el.innerHTML = colorize(line1, colorOffset) + '<br>' + colorize(line2, colorOffset + 3);
     }
 
     function drawOverlay(text, sub, reason) {
@@ -790,20 +883,23 @@
 
     function draw() {
       if (trailActive) {
-        const hue = (performance.now() / 25) % 360;
-        document.body.style.backgroundColor = `hsl(${hue}, 90%, 15%)`;
+        const hue = (performance.now() / 18.75) % 360;
+        bgA.style.filter = `hue-rotate(${hue}deg) saturate(1.4)`;
+        bgB.style.filter = `hue-rotate(${hue}deg) saturate(1.4)`;
       } else {
-        document.body.style.backgroundColor = bgImages.length ? 'transparent' : '#111';
+        bgA.style.filter = '';
+        bgB.style.filter = '';
       }
+      frenzyOverlay.style.opacity = '0';
       ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = 'rgba(17,17,17,0.85)'; ctx.fillRect(0, 0, W, H);
       drawDashedCenter();
       drawPaddleWithHoles(player, '#4af', playerHoles);
       drawPaddleWithHoles(ai, '#f74', aiHoles);
-      drawShield();
+      drawShieldCrackle();
       updateFrenzyCounter();
-      if (state !== 'idle') { drawTrail(); drawBall(); drawBullets(); drawTrailBanner(); }
-      if (state === 'idle')   drawOverlay('PONG', 'SPACE or Click to start');
+      if (state !== 'idle') { drawTrail(); drawBall(); drawBullets(); }
+      if (state === 'idle')   drawOverlay('SPACE PONG', 'SPACE or Click to start');
       else if (state === 'paused') drawOverlay('PAUSED', 'Press SPACE to resume');
       else if (state === 'win')    drawOverlay(winnerText, 'SPACE or Click to play again', winReason);
     }
