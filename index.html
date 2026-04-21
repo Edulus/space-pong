@@ -758,7 +758,10 @@
       tryAIShoot();
       updateBullets();
 
-      const spd = speedMultiplier * (trailActive ? TRAIL_SPEED_MULT : 1);
+      const frenzyMult = trailActive
+        ? 1 + (TRAIL_SPEED_MULT - 1) * Math.min(1, (TRAIL_DURATION - (trailEndTime - performance.now())) / 5000)
+        : 1;
+      const spd = speedMultiplier * frenzyMult;
       ball.x += ball.vx * spd;
       ball.y += ball.vy * spd;
 
