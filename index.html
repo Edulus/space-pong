@@ -950,14 +950,14 @@
       const remaining = state === 'paused' ? trailPausedRemaining : trailEndTime - performance.now();
       const secs = Math.max(0, Math.ceil(remaining / 1000));
       countdown.style.visibility = 'visible';
-      countdown.textContent = `⚡ ${secs}s ⚡`;
+      countdown.textContent = `🌈⚡ ${secs}s ⚡🌈`;
     }
 
     function drawFrenzyEdgeText() {
       sctx.clearRect(0, 0, SW, SH);
       if (!trailActive || state === 'win' || state === 'idle') return;
 
-      const text = `\u2605 RAINBOW FRENZY !! \u2605   x${TRAIL_SCORE_MULT} SCORE   x${TRAIL_SPEED_MULT} SPEED`;
+      const text = `🌈 !! x${TRAIL_SPEED_MULT} SPEED  *  Rainbow Frenzy  *  POINTS x${TRAIL_SCORE_MULT} !!  🌈`;
 
       const perimeter = 2 * (SW + SH);
       if (state === 'playing') frenzyTextPerimPos = (frenzyTextPerimPos + 3.5) % perimeter;
@@ -976,7 +976,7 @@
       sctx.save();
       sctx.translate(px, py);
       sctx.rotate(angle);
-      sctx.font = 'bold 13px Courier New';
+      sctx.font = 'bold 16px Courier New';
       sctx.textBaseline = 'middle';
 
       const chars = text.split('');
