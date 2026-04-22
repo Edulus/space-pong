@@ -29,6 +29,7 @@
       font-size: 48px;
       font-weight: bold;
       letter-spacing: 4px;
+      line-height: 1;
     }
     #score-player { flex: 1; text-align: center; }
     #score-ai     { flex: 1; text-align: center; }
@@ -42,10 +43,11 @@
       letter-spacing: 2px;
       color: #ddd;
       text-shadow: 0 1px 6px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,0.9);
+      line-height: 1;
     }
-    #label-player { flex: 1; text-align: center; }
+    #label-player { flex: 1; text-align: center; white-space: nowrap; }
     #label-spacer  { flex: 1; }
-    #label-ai     { flex: 1; text-align: center; }
+    #label-ai     { flex: 1; text-align: center; white-space: nowrap; }
     #frenzy-row {
       display: flex;
       width: 804px;
@@ -66,6 +68,23 @@
     @keyframes kenBurns {
       from { transform: scale(1.0); }
       to   { transform: scale(1.1); }
+    }
+    @keyframes rainbowCycle {
+      0%   { color: #ff0000; }
+      14%  { color: #ff7f00; }
+      28%  { color: #ffff00; }
+      42%  { color: #00ff00; }
+      57%  { color: #0000ff; }
+      71%  { color: #4b0082; }
+      85%  { color: #9400d3; }
+      100% { color: #ff0000; }
+    }
+    .rainbow-text {
+      animation: rainbowCycle 2s linear infinite;
+      font-weight: bold;
+      font-size: 28px;
+      letter-spacing: 2px;
+      display: block;
     }
     .bg-layer {
       position: fixed; inset: 0;
@@ -91,6 +110,7 @@
     #frenzy-countdown {
       font-size: 20px; font-weight: bold; color: #ff4; letter-spacing: 3px;
       visibility: hidden;
+      white-space: nowrap;
       text-shadow: 0 1px 6px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,0.9);
     }
     #now-playing-label {
@@ -139,7 +159,7 @@
     <canvas id="c"></canvas>
     <canvas id="scrawl-canvas" width="832" height="532"></canvas>
   </div>
-  <div id="keys-help">SHIELD: ← or 4 &nbsp;|&nbsp; SHOOT: → or 6 &nbsp;|&nbsp; PAUSE: Space Bar &nbsp;|&nbsp; FASTER: + &nbsp;|&nbsp; SLOWER: -</div>
+  <div id="keys-help">SHIELD: ← or 4 &nbsp;|&nbsp; SHOOT: → or 6 &nbsp;|&nbsp; PAUSE: Space Bar &nbsp;|&nbsp; MUTE: 5 &nbsp;|&nbsp; SLOWER: - &nbsp;|&nbsp; FASTER: +</div>
 
   <script>
     // ─── Background images (NASA APOD) ───────────────────────────────────────
@@ -255,6 +275,7 @@
     const SW = 832, SH = 532, SG = 14; // scrawl canvas dims and gutter size
 
     const PADDLE_W = 12, PADDLE_H = 90, BALL_R = 8;
+    const PADDLE_CURVE = 0.35; // spin multiplier based on hit position
     const KEY_PADDLE_SPEED = 11;
     const WIN_SCORE = 99;
     const BULLET_R = 4, BULLET_SPEED = 9;
@@ -295,42 +316,161 @@
     }
 
     function playShootSound() {
-      const t = audioCtx.currentTime;
+      const now = audioCtx.currentTime;
+      const dur = 0.6;
 
-      // Bass thump — the physical punch
-      const o1 = audioCtx.createOscillator(), g1 = audioCtx.createGain();
-      o1.type = 'sine';
-      o1.frequency.setValueAtTime(180, t);
-      o1.frequency.exponentialRampToValueAtTime(38, t + 0.2);
-      g1.gain.setValueAtTime(0.75, t);
-      g1.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-      o1.connect(g1); g1.connect(audioCtx.destination);
-      o1.start(t); o1.stop(t + 0.22);
+      // Main descending laser oscillator
+      const osc1 = audioCtx.createOscillator();
+      osc1.type = 'sawtooth';
+      osc1.frequency.setValueAtTime(800, now);
+      osc1.frequency.exponentialRampToValueAtTime(40, now + dur);
 
-      // Zap layer — descending sawtooth for the "shot" character
-      const o2 = audioCtx.createOscillator(), g2 = audioCtx.createGain();
-      o2.type = 'sawtooth';
-      o2.frequency.setValueAtTime(820, t);
-      o2.frequency.exponentialRampToValueAtTime(140, t + 0.14);
-      g2.gain.setValueAtTime(0.35, t);
-      g2.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
-      o2.connect(g2); g2.connect(audioCtx.destination);
-      o2.start(t); o2.stop(t + 0.16);
+      // Sub bass layer for depth
+      const osc2 = audioCtx.createOscillator();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(400, now);
+      osc2.frequency.exponentialRampToValueAtTime(25, now + dur);
 
-      // Noise crack — sharp attack transient on the front edge
-      const bufLen = Math.ceil(audioCtx.sampleRate * 0.055);
-      const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = buf;
-      const bpf = audioCtx.createBiquadFilter();
-      bpf.type = 'bandpass'; bpf.frequency.value = 2200; bpf.Q.value = 0.9;
-      const g3 = audioCtx.createGain();
-      g3.gain.setValueAtTime(0.55, t);
-      g3.gain.exponentialRampToValueAtTime(0.001, t + 0.055);
-      noise.connect(bpf); bpf.connect(g3); g3.connect(audioCtx.destination);
-      noise.start(t); noise.stop(t + 0.06);
+      // Metallic shimmer
+      const osc3 = audioCtx.createOscillator();
+      osc3.type = 'square';
+      osc3.frequency.setValueAtTime(1200, now);
+      osc3.frequency.exponentialRampToValueAtTime(60, now + dur * 0.8);
+
+      // Lowpass filter sweep for that laser "zap" character
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(3000, now);
+      filter.frequency.exponentialRampToValueAtTime(200, now + dur);
+      filter.Q.value = 12;
+
+      // Amp envelope
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.5, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      const sub = audioCtx.createGain();
+      sub.gain.value = 0.6;
+      const shim = audioCtx.createGain();
+      shim.gain.value = 0.15;
+
+      osc1.connect(filter);
+      osc3.connect(shim).connect(filter);
+      filter.connect(gain);
+      osc2.connect(sub).connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc1.start(now); osc2.start(now); osc3.start(now);
+      osc1.stop(now + dur); osc2.stop(now + dur); osc3.stop(now + dur);
+    }
+
+    // Charging sound: rises from low to high frequency and sustains
+    function startChargingSound() {
+      if (isChargeSoundPlaying) return;
+      isChargeSoundPlaying = true;
+
+      const now = audioCtx.currentTime;
+
+      chargeOscillator = audioCtx.createOscillator();
+      chargeOscillator.type = 'sine';
+      chargeOscillator.frequency.setValueAtTime(220, now); // A3 - start low
+      chargeOscillator.frequency.linearRampToValueAtTime(660, now + 0.8); // rise to E4 over 0.8s
+
+      chargeGain = audioCtx.createGain();
+      chargeGain.gain.setValueAtTime(0, now);
+      chargeGain.gain.linearRampToValueAtTime(0.25, now + 0.05); // quick attack
+      // sustain at 0.25 until stopped
+
+      chargeOscillator.connect(chargeGain);
+      chargeGain.connect(audioCtx.destination);
+      chargeOscillator.start(now);
+    }
+
+    function stopChargingSound() {
+      if (!isChargeSoundPlaying) return;
+      isChargeSoundPlaying = false;
+
+      if (chargeOscillator && chargeGain) {
+        const now = audioCtx.currentTime;
+        const fadeDur = 0.15;
+
+        chargeGain.gain.cancelScheduledValues(now);
+        chargeGain.gain.setValueAtTime(chargeGain.gain.value, now);
+        chargeGain.gain.exponentialRampToValueAtTime(0.001, now + fadeDur);
+
+        setTimeout(() => {
+          try {
+            chargeOscillator.stop();
+          } catch (e) {}
+          chargeOscillator = null;
+          chargeGain = null;
+        }, fadeDur * 1000);
+      }
+    }
+
+    // Powerful "pew" sound on charge release, intensity scales with charge level
+    function playChargeFireSound(chargeLevel = 0) {
+      const now = audioCtx.currentTime;
+      const baseFreq = 1800;
+      const dur = 0.1 + chargeLevel * 0.1; // longer release for higher charge (0.1-0.2s)
+      const intensity = 0.25 + chargeLevel * 0.3; // louder for higher charge (0.25-0.55)
+
+      // High frequency sine that drops quickly
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(baseFreq + chargeLevel * 400, now); // higher start freq for higher charge
+      osc.frequency.exponentialRampToValueAtTime(200 + chargeLevel * 200, now + dur);
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(intensity, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + dur);
+    }
+
+    function playAIShootSound() {
+      const now = audioCtx.currentTime;
+      const dur = 0.35;
+
+      const osc1 = audioCtx.createOscillator();
+      osc1.type = 'sawtooth';
+      osc1.frequency.setValueAtTime(1200, now);
+      osc1.frequency.exponentialRampToValueAtTime(180, now + dur);
+
+      const osc2 = audioCtx.createOscillator();
+      osc2.type = 'square';
+      osc2.frequency.setValueAtTime(800, now);
+      osc2.frequency.exponentialRampToValueAtTime(120, now + dur);
+
+      const sub = audioCtx.createOscillator();
+      sub.type = 'sine';
+      sub.frequency.setValueAtTime(400, now);
+      sub.frequency.exponentialRampToValueAtTime(80, now + dur);
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(3000, now);
+      filter.frequency.exponentialRampToValueAtTime(400, now + dur);
+      filter.Q.value = 8;
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.35, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      sub.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc1.start(now); osc2.start(now); sub.start(now);
+      osc1.stop(now + dur); osc2.stop(now + dur); sub.stop(now + dur);
     }
 
     function playBulletHitSound() {
@@ -429,6 +569,24 @@
 
     const audio = new Audio();
     audio.volume = 0.9;
+    let fadeInTimer = null;
+    let isMuted = false;
+    let muteVolume = 0.9;
+
+    function fadeInMusic() {
+      if (fadeInTimer) clearInterval(fadeInTimer);
+      audio.volume = 0;
+      const targetVol = 0.9;
+      const dur = 500; // 500ms
+      const startTime = performance.now();
+      const step = () => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(1, elapsed / dur);
+        audio.volume = progress * targetVol;
+        if (progress < 1) fadeInTimer = setTimeout(step, 16);
+      };
+      fadeInTimer = setTimeout(step, 16);
+    }
 
     let useFrenzyMusic = false;
     let preFrenzyQueueIdx = 0;
@@ -452,12 +610,13 @@
     let currentTrackIdx = trackQueue[0];
 
     audio.addEventListener('ended', () => {
-      if (useFrenzyMusic) { audio.play().catch(() => {}); return; }
+      if (useFrenzyMusic) { fadeInMusic(); audio.play().catch(() => {}); return; }
       const last = trackQueue[trackQueueIdx];
       trackQueueIdx++;
       if (trackQueueIdx >= trackQueue.length) buildTrackQueue(last);
       currentTrackIdx = trackQueue[trackQueueIdx];
       setTrackSrc();
+      fadeInMusic();
       audio.play().catch(() => {});
     });
 
@@ -473,12 +632,23 @@
         audio.removeEventListener('loadedmetadata', seekAndPlay);
         const safeDuration = Math.max(0, audio.duration - 20);
         if (safeDuration > 0) audio.currentTime = Math.random() * safeDuration;
+        fadeInMusic();
         audio.play().catch(() => {});
       });
     }
 
     function stopMusic() {
       audio.pause();
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      if (isMuted) {
+        muteVolume = audio.volume;
+        audio.volume = 0;
+      } else {
+        audio.volume = muteVolume;
+      }
     }
 
     function syncMusicToState() {
@@ -507,12 +677,32 @@
     let lastPlayerShot = 0;
     let nextAIShot = 0;
 
+    // Charging weapon system
+    let playerChargeLevel = 0;      // 0-1 (0% to 100%)
+    let isPlayerCharging = false;
+    let playerChargeStartTime = 0;
+    const CHARGE_TIME_MS = 2000;    // time to reach 100%
+    const CHARGE_LEVELS = [0, 0.33, 0.66, 1.0]; // tap, medium, high, full
+
+    // Charging sound state
+    let chargeOscillator = null;
+    let chargeGain = null;
+    let isChargeSoundPlaying = false;
+
     let playerBullets = [], aiBullets = [];
     let aiHoles = [], playerHoles = [];
+    let particles = [];
+    let rallyCount = 0;
+    let shakeMagnitude = 0;
+    let shakeDuration = 0;
 
     const player = { x: 20,          y: H / 2 - PADDLE_H / 2, score: 0 };
     const ai     = { x: W-20-PADDLE_W, y: H / 2 - PADDLE_H / 2, score: 0 };
-    const ball   = { x: W/2, y: H/2, vx: 0, vy: 0, speed: 5 };
+    const ball   = { x: W/2, y: H/2, vx: 0, vy: 0, speed: 5, spin: 0 };
+
+    // Track paddle velocities for spin calculation
+    let playerPrevY = player.y;
+    let aiPrevY = ai.y;
 
     let mouseY = H / 2;
     let winnerText = '';
@@ -541,7 +731,7 @@
         if (state === 'idle' || state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; startMusic(); }
         else if (state === 'playing') {
           state = 'paused';
-          stopShieldSound(); shieldIsOn = false;
+          stopShieldSound(); stopChargingSound(); shieldIsOn = false;
           if (trailActive) trailPausedRemaining = Math.max(0, trailEndTime - performance.now());
         }
         else if (state === 'paused') {
@@ -555,14 +745,26 @@
       if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd')      setSpeed(speedMultiplier + 0.1);
       if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract') setSpeed(speedMultiplier - 0.1);
 
+      // Mute toggle: 5 or Numpad5
+      if (e.key === '5' || e.code === 'Numpad5') toggleMute();
+
     });
 
-    document.addEventListener('keyup', e => { keys[e.key] = false; });
+    document.addEventListener('keyup', e => {
+      keys[e.key] = false;
+
+      // Fire charged shot when releasing →
+      if ((e.key === 'ArrowRight') && isPlayerCharging) {
+        firePlayerBullet(playerChargeLevel);
+        isPlayerCharging = false;
+        playerChargeLevel = 0;
+      }
+    });
 
 
     // ─── Game logic ───────────────────────────────────────────────────────────
     function resetGame() {
-      stopShieldSound(); shieldIsOn = false; shieldEndTime = 0; shieldReadyTime = 0;
+      stopShieldSound(); stopChargingSound(); shieldIsOn = false; shieldEndTime = 0; shieldReadyTime = 0;
       applyNextBackground();
       player.score = 0; ai.score = 0;
       document.getElementById('score-player').textContent = 0;
@@ -572,6 +774,7 @@
       mouseY   = H / 2;
       playerBullets = []; aiBullets = [];
       aiHoles = []; playerHoles = [];
+      particles = [];
       trailActive = false; trailEnabled = false; ballTrail = [];
       useFrenzyMusic = false; buildTrackQueue(); currentTrackIdx = trackQueue[0];
       scheduleNextAIShot();
@@ -593,6 +796,7 @@
       ball.vx = ball.speed * (towardAI ? 1 : -1) * Math.cos(angle);
       ball.vy = ball.speed * Math.sin(angle);
       ballTrail = [];
+      rallyCount = 0;
     }
 
     function addHole(holesArr, paddle, hitY) {
@@ -662,7 +866,16 @@
     // Numpad key checks via e.code stored in keys-by-code map
     const codeKeys = {};
     document.addEventListener('keydown', e => { codeKeys[e.code] = true; });
-    document.addEventListener('keyup',   e => { codeKeys[e.code] = false; });
+    document.addEventListener('keyup',   e => {
+      codeKeys[e.code] = false;
+
+      // Fire charged shot when releasing Numpad6
+      if ((e.code === 'Numpad6') && isPlayerCharging) {
+        firePlayerBullet(playerChargeLevel);
+        isPlayerCharging = false;
+        playerChargeLevel = 0;
+      }
+    });
 
     const e_num8 = () => codeKeys['Numpad8'];
     const e_num2 = () => codeKeys['Numpad2'];
@@ -694,12 +907,46 @@
     }
 
     function tryPlayerShoot() {
-      if (!keys['ArrowRight'] && !codeKeys['Numpad6']) return;
+      const shootKeyPressed = keys['ArrowRight'] || codeKeys['Numpad6'];
+
+      // Start charging if key pressed and not already charging
+      if (shootKeyPressed && !isPlayerCharging) {
+        isPlayerCharging = true;
+        playerChargeStartTime = performance.now();
+        playerChargeLevel = 0;
+        startChargingSound(); // start charging sound
+      }
+
+      // Update charge level while holding
+      if (isPlayerCharging) {
+        const elapsed = performance.now() - playerChargeStartTime;
+        playerChargeLevel = Math.min(1, elapsed / CHARGE_TIME_MS);
+      }
+    }
+
+    function firePlayerBullet(chargeLevel) {
       const now = performance.now();
       if (now - lastPlayerShot < SHOT_COOLDOWN) return;
       lastPlayerShot = now;
-      playerBullets.push({ x: player.x + PADDLE_W + 2, y: player.y + PADDLE_H / 2 });
-      playShootSound();
+
+      // Determine power level based on charge (4 levels)
+      let powerLevel = 0;
+      if (chargeLevel < 0.01) powerLevel = 0;      // tap = level 0
+      else if (chargeLevel < 0.33) powerLevel = 1; // medium
+      else if (chargeLevel < 0.66) powerLevel = 2; // high
+      else powerLevel = 3;                         // full
+
+      // Add bullet with power metadata
+      playerBullets.push({
+        x: player.x + PADDLE_W + 2,
+        y: player.y + PADDLE_H / 2,
+        power: powerLevel,
+        chargePercent: chargeLevel
+      });
+
+      // Audio: stop charging sound and play release sound correlated to charge level
+      stopChargingSound();
+      playChargeFireSound(chargeLevel);
     }
 
     function tryAIShoot() {
@@ -707,7 +954,7 @@
       if (now < nextAIShot) return;
       scheduleNextAIShot();
       aiBullets.push({ x: ai.x - 2, y: ai.y + PADDLE_H / 2 });
-      playShootSound();
+      playAIShootSound();
     }
 
     function updateShieldState() {
@@ -722,17 +969,93 @@
       if (!wasOn &&  shieldIsOn) startShieldSound();
     }
 
+    // ─── Particle System ──────────────────────────────────────────────────────
+    class Particle {
+      constructor(x, y, vx, vy, life, color, size) {
+        this.x = x; this.y = y;
+        this.vx = vx; this.vy = vy;
+        this.life = life; this.maxLife = life;
+        this.color = color; this.size = size;
+      }
+    }
+
+    function spawnHitParticles(x, y, dir) {
+      const extra = rallyCount >= 10 ? 8 : rallyCount >= 5 ? 4 : 0;
+      const count = 8 + extra;
+      const baseColor = dir > 0 ? '#4af' : '#f74';
+      const hotColor = '#ff3300';
+      const color = rallyCount >= 10 ? hotColor : baseColor;
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.random() - 0.5) * Math.PI * 0.8 + (dir > 0 ? 0 : Math.PI);
+        const speed = 1.5 + Math.random() * 3;
+        particles.push(new Particle(
+          x, y,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed,
+          0.4 + Math.random() * 0.3,
+          color,
+          2 + Math.random() * 2
+        ));
+      }
+    }
+
+    function spawnScoreExplosion(x, y, color) {
+      const count = 24;
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2 + Math.random() * 0.3;
+        const speed = 2 + Math.random() * 5;
+        particles.push(new Particle(
+          x, y,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed,
+          0.6 + Math.random() * 0.4,
+          color,
+          2 + Math.random() * 3
+        ));
+      }
+    }
+
+    function drawParticles() {
+      ctx.save();
+      particles.forEach(p => {
+        const t = p.life / p.maxLife;
+        ctx.globalAlpha = t;
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * t, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
     function updateBullets() {
       const shield = shieldIsOn;
       const shieldX = player.x + PADDLE_W + 2;
 
       playerBullets = playerBullets.filter(b => {
-        b.x += BULLET_SPEED * speedMultiplier;
+        // Speed scales with power level (0-3): tap=1x, medium=1.5x, high=2x, full=3x
+        const speedMultiplier_bullet = 1 + (b.power || 0) * 0.65;
+        b.x += BULLET_SPEED * speedMultiplier * speedMultiplier_bullet;
         if (b.x > W) return false;
         const inX = b.x + BULLET_R >= ai.x && b.x - BULLET_R <= ai.x + PADDLE_W;
         const inY = b.y >= ai.y && b.y <= ai.y + PADDLE_H;
         if (inX && inY) {
-          if (!isHole(aiHoles, ai, b.y)) { addHole(aiHoles, ai, b.y); playBulletHitSound(); }
+          // Full power (level 3) bullets destroy the paddle immediately
+          if (b.power === 3) {
+            state = 'win';
+            player.score += 10;
+            document.getElementById('score-player').textContent = player.score;
+            winnerText = 'YOU WIN!';
+            winReason = 'Paddle destroyed by full power shot!';
+            syncMusicToState();
+          } else if (!isHole(aiHoles, ai, b.y)) {
+            addHole(aiHoles, ai, b.y);
+            playBulletHitSound();
+          }
           return false;
         }
         return true;
@@ -764,8 +1087,18 @@
     }
 
     function reflect(paddle) {
-      const hitPos = (ball.y - paddle.y) / PADDLE_H;
-      const angle  = (hitPos - 0.5) * Math.PI * 0.65;
+      // hitPos: -1 (top) to 1 (bottom)
+      const hitPos = ((ball.y - paddle.y) / PADDLE_H - 0.5) * 2;
+
+      // Spin from curved paddle: depends on hit position and paddle curve constant
+      ball.spin = hitPos * PADDLE_CURVE * 8;
+
+      // Add paddle velocity contribution to spin (small factor)
+      const paddleVy = paddle === player ? playerPrevY - paddle.y : aiPrevY - paddle.y;
+      ball.spin += paddleVy * 0.3;
+
+      // Reflect ball and set velocity
+      const angle  = hitPos * Math.PI * 0.65;
       ball.speed = Math.min(ball.speed + 0.3, 14);
       const dir = paddle === player ? 1 : -1;
       ball.vx = dir * ball.speed * Math.cos(angle);
@@ -776,6 +1109,11 @@
       if (state !== 'playing') return;
 
       updateTrail();
+
+      // Track previous paddle positions for velocity calculation
+      playerPrevY = player.y;
+      aiPrevY = ai.y;
+
       window._updatePlayer();
       updateAI();
       updateShieldState();
@@ -787,6 +1125,12 @@
         ? 1 + (TRAIL_SPEED_MULT - 1) * Math.min(1, (TRAIL_DURATION - (trailEndTime - performance.now())) / 5000)
         : 1;
       const spd = speedMultiplier * frenzyMult;
+
+      // Apply spin as a vertical force — this curves the ball mid-flight
+      ball.vy += ball.spin * 0.15;
+      // Spin decays over time
+      ball.spin *= 0.995;
+
       ball.x += ball.vx * spd;
       ball.y += ball.vy * spd;
 
@@ -799,23 +1143,45 @@
       if (ball.y + BALL_R >= H) { ball.y = H - BALL_R; ball.vy = -Math.abs(ball.vy); playFloorCeilingSound(); }
 
       if (ball.vx < 0 && collidesWithPaddle(player)) {
-        ball.x = player.x + PADDLE_W + BALL_R; reflect(player); playPaddleSound();
+        ball.x = player.x + PADDLE_W + BALL_R; reflect(player); playPaddleSound(); spawnHitParticles(ball.x, ball.y, 1);
+        rallyCount++;
+        shakeMagnitude = Math.min(1 + rallyCount * 0.4, 6);
+        shakeDuration = 6;
       }
       if (ball.vx > 0 && collidesWithPaddle(ai)) {
-        ball.x = ai.x - BALL_R; reflect(ai); playPaddleSound();
+        ball.x = ai.x - BALL_R; reflect(ai); playPaddleSound(); spawnHitParticles(ball.x, ball.y, -1);
+        rallyCount++;
+        shakeMagnitude = Math.min(1 + rallyCount * 0.4, 6);
+        shakeDuration = 6;
       }
 
       if (ball.x - BALL_R < 0) {
         ai.score += trailActive ? TRAIL_SCORE_MULT : 1;
         document.getElementById('score-ai').textContent = ai.score;
+        spawnScoreExplosion(0, ball.y, '#f74');
+        shakeMagnitude = 8;
+        shakeDuration = 14;
         checkWin('CPU');
         if (state === 'playing') launchBall(false);
       } else if (ball.x + BALL_R > W) {
         player.score += trailActive ? TRAIL_SCORE_MULT : 1;
         document.getElementById('score-player').textContent = player.score;
+        spawnScoreExplosion(W, ball.y, '#4af');
+        shakeMagnitude = 8;
+        shakeDuration = 14;
         checkWin('YOU');
         if (state === 'playing') launchBall(true);
       }
+
+      // Update particles
+      const dt = 1 / 60;
+      particles = particles.filter(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.08; // light gravity
+        p.life -= dt;
+        return p.life > 0;
+      });
     }
 
     function checkWin(who) {
@@ -837,7 +1203,37 @@
     }
 
     function drawPaddleWithHoles(paddle, color, holes) {
+      // Charging glow for player paddle
+      if (paddle === player && playerChargeLevel > 0) {
+        // Calculate glow intensity based on charge (0 to 1)
+        const chargeIntensity = playerChargeLevel;
+
+        // Color shift: cool blue (#4af) → warm orange (#ff6b35)
+        // Interpolate between cool and warm
+        const coolR = 68, coolG = 170, coolB = 255;   // #4af
+        const warmR = 255, warmG = 107, warmB = 53;   // #ff6b35
+        const r = Math.round(coolR + (warmR - coolR) * chargeIntensity);
+        const g = Math.round(coolG + (warmG - coolG) * chargeIntensity);
+        const b = Math.round(coolB + (warmB - coolB) * chargeIntensity);
+        const glowColor = `rgb(${r},${g},${b})`;
+
+        // Glow blur increases with charge (base 8 → max 35)
+        const glowBlur = 8 + chargeIntensity * 27;
+
+        // Draw glow halo
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = glowBlur;
+        ctx.globalAlpha = 0.3 + chargeIntensity * 0.4; // fade from 0.3 to 0.7, not too bright
+        ctx.fillStyle = glowColor;
+        ctx.beginPath();
+        ctx.roundRect(paddle.x - 2, paddle.y - 2, PADDLE_W + 4, PADDLE_H + 4, 4);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // Draw paddle body
       ctx.fillStyle = color;
+      ctx.shadowBlur = 0; // reset shadow
       ctx.beginPath(); ctx.roundRect(paddle.x, paddle.y, PADDLE_W, PADDLE_H, 4); ctx.fill();
       ctx.fillStyle = '#111';
       holes.forEach(relY => {
@@ -919,9 +1315,22 @@
       ctx.shadowBlur = 0;
     }
 
+    function ballHeatColor() {
+      if (rallyCount >= 10) return '#ff3300';   // hot red
+      if (rallyCount >= 5)  return '#ff9900';   // warm orange
+      return '#ffffff';                          // cool white
+    }
+
     function drawBall() {
-      ctx.fillStyle = '#fff';
+      const color = ballHeatColor();
+      const glow = rallyCount >= 10 ? 18 : rallyCount >= 5 ? 8 : 0;
+      if (glow > 0) {
+        ctx.shadowColor = color;
+        ctx.shadowBlur = glow;
+      }
+      ctx.fillStyle = color;
       ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
     }
 
     function drawTrail() {
@@ -950,7 +1359,7 @@
       const remaining = state === 'paused' ? trailPausedRemaining : trailEndTime - performance.now();
       const secs = Math.max(0, Math.ceil(remaining / 1000));
       countdown.style.visibility = 'visible';
-      countdown.innerHTML = `🌈⚡ <span style="font-size:32px">${secs}s</span> ⚡🌈`;
+      countdown.innerHTML = `<div class="rainbow-text">✦ RAINBOW FRENZY ✦</div><div>🌈⚡ <span style="font-size:32px">${secs}s</span> ⚡🌈</div>`;
     }
 
     function drawFrenzyEdgeText() {
@@ -1019,16 +1428,39 @@
       frenzyOverlay.style.opacity = '0';
       ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = 'rgba(17,17,17,0.85)'; ctx.fillRect(0, 0, W, H);
+
+      ctx.save();
+      if (shakeDuration > 0) {
+        const dx = (Math.random() * 2 - 1) * shakeMagnitude;
+        const dy = (Math.random() * 2 - 1) * shakeMagnitude;
+        ctx.translate(dx, dy);
+        shakeDuration--;
+      }
+
       drawDashedCenter();
       drawPaddleWithHoles(player, '#4af', playerHoles);
       drawPaddleWithHoles(ai, '#f74', aiHoles);
       drawShieldCrackle();
       updateFrenzyCounter();
-      if (state !== 'idle') { drawTrail(); drawBall(); drawBullets(); }
+      if (state !== 'idle') { drawTrail(); drawBall(); drawParticles(); drawBullets(); }
       drawFrenzyEdgeText();
       if (state === 'idle')   drawOverlay('SPACE PONG', 'SPACE or Click to start');
       else if (state === 'paused') drawOverlay('PAUSED', 'Press SPACE to resume');
       else if (state === 'win')    drawOverlay(winnerText, 'SPACE or Click to play again', winReason);
+
+      ctx.restore();
+
+      // Rally heat border glow
+      const wrapper = document.getElementById('canvas-wrapper');
+      if (rallyCount >= 10) {
+        const pulse = 0.6 + 0.4 * Math.sin(performance.now() / 150);
+        const intensity = Math.round(20 + rallyCount * 1.5);
+        wrapper.style.boxShadow = `0 0 ${intensity}px ${Math.round(intensity/2)}px rgba(255,50,0,${(pulse * 0.8).toFixed(2)})`;
+      } else if (rallyCount >= 5) {
+        wrapper.style.boxShadow = `0 0 14px 4px rgba(255,150,0,0.45)`;
+      } else {
+        wrapper.style.boxShadow = '';
+      }
     }
 
     function loop() { update(); draw(); requestAnimationFrame(loop); }
