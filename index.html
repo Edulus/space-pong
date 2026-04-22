@@ -568,15 +568,15 @@
     const frenzyTrackMeta = { name: 'Pyromania', id: 2921 };
 
     const audio = new Audio();
-    audio.volume = 0.9;
+    audio.volume = 0.5;
     let fadeInTimer = null;
     let isMuted = false;
-    let muteVolume = 0.9;
+    let muteVolume = 0.5;
 
     function fadeInMusic() {
       if (fadeInTimer) clearInterval(fadeInTimer);
       audio.volume = 0;
-      const targetVol = 0.9;
+      const targetVol = 0.5;
       const dur = 500; // 500ms
       const startTime = performance.now();
       const step = () => {
@@ -808,6 +808,7 @@
           // Paddle destroyed — other team wins
           const who = paddle === player ? 'CPU' : 'YOU';
           state = 'win';
+          stopChargingSound();
           winnerText = who === 'YOU' ? 'YOU WIN!' : 'CPU WINS!';
           winReason  = who === 'YOU' ? 'CPU paddle destroyed by bullets' : 'Your paddle was shot to pieces';
           syncMusicToState();
@@ -1047,6 +1048,7 @@
           // Full power (level 3) bullets destroy the paddle immediately
           if (b.power === 3) {
             state = 'win';
+            stopChargingSound();
             player.score += 10;
             document.getElementById('score-player').textContent = player.score;
             winnerText = 'YOU WIN!';
@@ -1188,6 +1190,7 @@
       const s = who === 'YOU' ? player.score : ai.score;
       if (s >= WIN_SCORE) {
         state = 'win';
+        stopChargingSound();
         winnerText = who === 'YOU' ? 'YOU WIN!' : 'CPU WINS!';
         winReason  = `First to ${WIN_SCORE} points`;
         syncMusicToState();
