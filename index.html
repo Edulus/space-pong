@@ -23,7 +23,7 @@
     #scoreboard {
       display: flex;
       align-items: center;
-      width: 804px;
+      width: 884px;
       height: 72px;
       flex-shrink: 0;
       font-size: 48px;
@@ -35,7 +35,7 @@
     #score-ai     { flex: 1; text-align: center; }
     #label-row {
       display: flex;
-      width: 804px;
+      width: 884px;
       height: 30px;
       flex-shrink: 0;
       align-items: flex-start;
@@ -50,7 +50,7 @@
     #label-ai     { flex: 1; text-align: center; white-space: nowrap; }
     #frenzy-row {
       display: flex;
-      width: 804px;
+      width: 884px;
       height: 32px;
       flex-shrink: 0;
       align-items: center;
@@ -101,7 +101,7 @@
     #scoreboard, #label-row, #canvas-wrapper, #controls, #keys-help, #now-playing-label {
       position: relative; z-index: 3;
     }
-    #canvas-wrapper { width: 804px; height: 504px; flex-shrink: 0; }
+    #canvas-wrapper { width: 884px; height: 554px; flex-shrink: 0; }
     #scrawl-canvas  { position: absolute; top: -14px; left: -14px; pointer-events: none; z-index: 4; }
     canvas { border: 2px solid #555; cursor: none; }
     #now-playing-center {
@@ -157,7 +157,7 @@
   </div>
   <div id="canvas-wrapper">
     <canvas id="c"></canvas>
-    <canvas id="scrawl-canvas" width="832" height="532"></canvas>
+    <canvas id="scrawl-canvas" width="912" height="582"></canvas>
   </div>
   <div id="keys-help">SHIELD: ← or 4 &nbsp;|&nbsp; SHOOT: → or 6 &nbsp;|&nbsp; PAUSE: Space Bar &nbsp;|&nbsp; MUTE: 5 &nbsp;|&nbsp; SLOWER: - &nbsp;|&nbsp; FASTER: +</div>
 
@@ -267,7 +267,7 @@
 
     const canvas = document.getElementById('c');
     const ctx = canvas.getContext('2d');
-    const W = 800, H = 500;
+    const W = 880, H = 550;
     canvas.width = W; canvas.height = H;
 
     const scrawlEl = document.getElementById('scrawl-canvas');
@@ -1042,6 +1042,18 @@
         const speedMultiplier_bullet = 1 + (b.power || 0) * 0.65;
         b.x += BULLET_SPEED * speedMultiplier * speedMultiplier_bullet;
         if (b.x > W) return false;
+
+        // Check ball deflection (circle-circle collision)
+        const dist = Math.hypot(b.x - ball.x, b.y - ball.y);
+        if (dist < BULLET_R + BALL_R) {
+          const impulse = 2.5 + (b.power || 0) * 1.5;
+          ball.vx += impulse;
+          ball.vy += (ball.y - b.y) * 0.15;
+          ball.speed = Math.min(Math.hypot(ball.vx, ball.vy), 14);
+          playBulletHitSound();
+          return false;
+        }
+
         const inX = b.x + BULLET_R >= ai.x && b.x - BULLET_R <= ai.x + PADDLE_W;
         const inY = b.y >= ai.y && b.y <= ai.y + PADDLE_H;
         if (inX && inY) {
@@ -1066,6 +1078,17 @@
       aiBullets = aiBullets.filter(b => {
         b.x -= BULLET_SPEED * speedMultiplier;
         if (b.x < 0) return false;
+
+        // Check ball deflection (circle-circle collision)
+        const dist = Math.hypot(b.x - ball.x, b.y - ball.y);
+        if (dist < BULLET_R + BALL_R) {
+          ball.vx -= 2.5;
+          ball.vy += (ball.y - b.y) * 0.15;
+          ball.speed = Math.min(Math.hypot(ball.vx, ball.vy), 14);
+          playBulletHitSound();
+          return false;
+        }
+
         if (shield) {
           const inSX = b.x - BULLET_R <= shieldX + 8 && b.x + BULLET_R >= shieldX;
           const inSY = b.y >= player.y && b.y <= player.y + PADDLE_H;
