@@ -692,6 +692,7 @@
     let playerBullets = [], aiBullets = [];
     let aiHoles = [], playerHoles = [];
     let particles = [];
+    let afterimageTrails = [];
     let rallyCount = 0;
     let shakeMagnitude = 0;
     let shakeDuration = 0;
@@ -796,6 +797,7 @@
       ball.vx = ball.speed * (towardAI ? 1 : -1) * Math.cos(angle);
       ball.vy = ball.speed * Math.sin(angle);
       ballTrail = [];
+      afterimageTrails = [];
       rallyCount = 0;
     }
 
@@ -1348,6 +1350,26 @@
     }
 
     function drawBall() {
+      // Afterimage trail — always on, independent of Rainbow Frenzy
+      afterimageTrails.push({ x: ball.x, y: ball.y, life: 15, maxLife: 15 });
+      for (let i = afterimageTrails.length - 1; i >= 0; i--) {
+        const t = afterimageTrails[i];
+        const rallyHeat = Math.min(rallyCount / 15, 1);
+        const r = Math.round(255 - rallyHeat * 210);
+        const g = Math.round(255 - rallyHeat * 200);
+        const b = Math.round(255 - rallyHeat * 130);
+        ctx.globalAlpha = (t.life / t.maxLife) * 0.4;
+        ctx.fillStyle = trailEnabled
+          ? ['#f00','#f80','#ff0','#0f0','#08f','#a0f'][i % 6]
+          : `rgb(${r},${g},${b})`;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, BALL_R * (t.life / t.maxLife), 0, Math.PI * 2);
+        ctx.fill();
+        t.life--;
+        if (t.life <= 0) afterimageTrails.splice(i, 1);
+      }
+      ctx.globalAlpha = 1;
+
       const color = ballHeatColor();
       const glow = rallyCount >= 10 ? 18 : rallyCount >= 5 ? 8 : 0;
       if (glow > 0) {
