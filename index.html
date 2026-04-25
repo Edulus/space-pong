@@ -5,7 +5,7 @@
   <title>Pong</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -131,12 +131,182 @@
       margin-top: 30px; font-size: 15px; color: #bbb; letter-spacing: 1px;
       background: rgba(0,0,0,0.5); padding: 4px 12px; border-radius: 4px;
     }
+    #start-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      background: #05050f;
+      pointer-events: all;
+    }
+    #start-screen.hidden { display: none; }
+    #start-screen h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: 8px;
+      margin-bottom: 32px;
+      -webkit-font-smoothing: antialiased;
+      animation: neonColorCycle 4s linear infinite;
+    }
+    #start-screen .splash-subtitle {
+      font-size: 13px;
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      margin-bottom: 48px;
+      font-family: 'Courier New', monospace;
+    }
+    #start-screen .splash-prompt {
+      font-size: 18px;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      font-family: 'Courier New', monospace;
+      animation: splashBlink 1.5s ease-in-out infinite;
+      margin-bottom: 32px;
+    }
+    #start-screen .splash-controls {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 2px;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+    }
+    .key-clusters {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 28px;
+      margin-bottom: 20px;
+    }
+    .key-cluster {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+    .key-row {
+      display: flex;
+      gap: 5px;
+    }
+    .key-sq {
+      width: 44px; height: 44px;
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      border: 1px solid rgba(255,255,255,0.5);
+      border-radius: 7px;
+      color: rgba(255,255,255,0.9);
+      font-size: 17px;
+      font-family: 'Courier New', monospace;
+      background: rgba(255,255,255,0.07);
+      box-shadow: 0 3px 0 rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+    .key-wrap {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+    .key-wrap .key-sub {
+      font-size: 10px;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 1px;
+      text-transform: lowercase;
+      font-family: 'Courier New', monospace;
+    }
+    .cluster-or {
+      color: rgba(255,255,255,0.3);
+      font-size: 13px;
+      padding-top: 28px;
+      letter-spacing: 2px;
+    }
+    .key-misc {
+      display: inline-block;
+      padding: 2px 10px;
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 5px;
+      color: rgba(255,255,255,0.8);
+      font-family: 'Courier New', monospace;
+      box-shadow: 0 2px 0 rgba(0,0,0,0.4);
+      margin: 0 5px;
+    }
+    @keyframes neonColorCycle {
+      0%   { color: #f88; text-shadow: 0 0 2px #fff, 0 0 8px #f44, 0 0 22px rgba(255,50,50,0.6); }
+      16%  { color: #fc8; text-shadow: 0 0 2px #fff, 0 0 8px #f80, 0 0 22px rgba(255,140,0,0.6); }
+      33%  { color: #ff8; text-shadow: 0 0 2px #fff, 0 0 8px #ff0, 0 0 22px rgba(255,255,0,0.6); }
+      50%  { color: #8f8; text-shadow: 0 0 2px #fff, 0 0 8px #0f4, 0 0 22px rgba(0,255,80,0.6); }
+      66%  { color: #8ef; text-shadow: 0 0 2px #fff, 0 0 8px #08f, 0 0 22px rgba(0,150,255,0.6); }
+      83%  { color: #c8f; text-shadow: 0 0 2px #fff, 0 0 8px #80f, 0 0 22px rgba(150,0,255,0.6); }
+      100% { color: #f88; text-shadow: 0 0 2px #fff, 0 0 8px #f44, 0 0 22px rgba(255,50,50,0.6); }
+    }
+    #narrative-screen {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 100; background: #05050f;
+    }
+    #narrative-screen.hidden { display: none; }
+    #narrative-lines {
+      max-width: 620px; text-align: center;
+      font-family: 'Courier New', monospace;
+      font-size: 17px; color: #bbb;
+      line-height: 2.1; letter-spacing: 1px;
+    }
+    #narrative-lines p { margin: 0; min-height: 2.1em; }
+    #narrative-lines p.hl { letter-spacing: 2px; font-size: 19px; animation: neonColorCycle 4s linear infinite; }
+    #narrative-prompt {
+      margin-top: 52px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px; letter-spacing: 4px;
+      color: rgba(255,255,255,0.4);
+      visibility: hidden;
+      animation: splashBlink 1.5s ease-in-out infinite;
+    }
+    @keyframes splashBlink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.25; }
+    }
   </style>
 </head>
 <body>
   <div id="bg-a" class="bg-layer"></div>
   <div id="bg-b" class="bg-layer"></div>
   <div id="frenzy-overlay"></div>
+  <div id="narrative-screen" class="hidden">
+    <div id="narrative-lines"></div>
+    <div id="narrative-prompt">— PRESS SPACE TO BEGIN —</div>
+  </div>
+  <div id="start-screen">
+    <h1 id="splash-title">SPACE PONG</h1>
+    <div class="splash-subtitle">bullets · spin · frenzy · shields</div>
+    <div class="splash-prompt">Press Space or Click to Start</div>
+    <div class="splash-controls">
+      <div class="key-clusters">
+        <div class="key-cluster">
+          <div class="key-row"><span class="key-sq">W</span></div>
+          <div class="key-row">
+            <div class="key-wrap"><span class="key-sq">A</span><span class="key-sub">shield</span></div>
+            <span class="key-sq">S</span>
+            <div class="key-wrap"><span class="key-sq">D</span><span class="key-sub">shoot</span></div>
+          </div>
+        </div>
+        <div class="cluster-or">or</div>
+        <div class="key-cluster">
+          <div class="key-row"><span class="key-sq">↑</span></div>
+          <div class="key-row">
+            <div class="key-wrap"><span class="key-sq">←</span><span class="key-sub">shield</span></div>
+            <span class="key-sq">↓</span>
+            <div class="key-wrap"><span class="key-sq">→</span><span class="key-sub">shoot</span></div>
+          </div>
+        </div>
+      </div>
+      <div><span class="key-misc">5</span> Mute &nbsp;&nbsp;&nbsp; <span class="key-misc">Space</span> Pause</div>
+    </div>
+  </div>
   <div id="scoreboard">
     <span id="score-player">0</span>
     <div id="now-playing-center">
@@ -159,7 +329,7 @@
     <canvas id="c"></canvas>
     <canvas id="scrawl-canvas" width="912" height="582"></canvas>
   </div>
-  <div id="keys-help">SHIELD: ← or 4 &nbsp;|&nbsp; SHOOT: → or 6 &nbsp;|&nbsp; PAUSE: Space Bar &nbsp;|&nbsp; MUTE: 5 &nbsp;|&nbsp; SLOWER: - &nbsp;|&nbsp; FASTER: +</div>
+  <div id="keys-help">UP: W &nbsp;|&nbsp; DOWN: S &nbsp;|&nbsp; SHIELD: A &nbsp;|&nbsp; SHOOT: D &nbsp;|&nbsp; PAUSE: Space &nbsp;|&nbsp; MUTE: 5 &nbsp;|&nbsp; SLOWER: - &nbsp;|&nbsp; FASTER: +</div>
 
   <script>
     // ─── Background images (NASA APOD) ───────────────────────────────────────
@@ -473,6 +643,22 @@
       osc1.stop(now + dur); osc2.stop(now + dur); sub.stop(now + dur);
     }
 
+    function playTypeBeep() {
+      if (!audioCtx || audioCtx.state === 'suspended') return;
+      const t = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(700 + Math.random() * 500, t);
+      osc.frequency.exponentialRampToValueAtTime(400 + Math.random() * 200, t + 0.03);
+      gain.gain.setValueAtTime(0.04, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.05);
+    }
+
     function playBulletHitSound() {
       const t = audioCtx.currentTime;
       for (let i = 0; i < 3; i++) {
@@ -705,7 +891,6 @@
     let playerPrevY = player.y;
     let aiPrevY = ai.y;
 
-    let mouseY = H / 2;
     let winnerText = '';
     let winReason  = '';
 
@@ -714,22 +899,111 @@
     }
 
     // ─── Input ────────────────────────────────────────────────────────────────
-    canvas.addEventListener('mousemove', e => {
-      const r = canvas.getBoundingClientRect();
-      mouseY = e.clientY - r.top;
-    });
+    const startScreen    = document.getElementById('start-screen');
+    const narrativeScreen = document.getElementById('narrative-screen');
+
+    const STORY = [
+      { text: "THE YEAR IS 2157.", hl: false, pause: 900 },
+      { text: "A vast alien armada has locked orbit around Earth.", hl: false, pause: 700 },
+      { text: "Their fleet darkens the sky above every city on the planet.", hl: false, pause: 700 },
+      { text: "", pause: 500 },
+      { text: "Their message arrives in every language simultaneously:", hl: false, pause: 700 },
+      { text: "\"Send your champion. One game. Winner takes all.\"", hl: true, pause: 900 },
+      { text: "", pause: 500 },
+      { text: "Defeat — and Earth is erased from existence.", hl: false, pause: 700 },
+      { text: "Victory — and humanity earns its place among the stars.", hl: false, pause: 700 },
+      { text: "", pause: 400 },
+      { text: "Billions of lives rest on a single paddle.", hl: false, pause: 700 },
+      { text: "You are Earth's last hope.", hl: true, pause: 800 },
+      { text: "", pause: 300 },
+      { text: "Do not fail them.", hl: false, pause: 500 },
+    ];
+
+    let storyIdx = 0, storyCharIdx = 0, storyTimer = null, storyDone = false;
+
+    function startNarrative() {
+      state = 'narrative';
+      audioCtx.resume();
+      startScreen.classList.add('hidden');
+      narrativeScreen.classList.remove('hidden');
+      document.getElementById('narrative-prompt').style.visibility = 'hidden';
+      document.getElementById('narrative-lines').innerHTML = '';
+      storyIdx = 0; storyCharIdx = 0; storyDone = false;
+      typeStory();
+    }
+
+    function typeStory() {
+      if (storyIdx >= STORY.length) { finishStory(); return; }
+      const entry = STORY[storyIdx];
+      const linesEl = document.getElementById('narrative-lines');
+
+      if (storyCharIdx === 0) {
+        const p = document.createElement('p');
+        if (entry.hl) p.className = 'hl';
+        p.id = 'sl' + storyIdx;
+        linesEl.appendChild(p);
+      }
+
+      if (entry.text === '') {
+        storyIdx++; storyCharIdx = 0;
+        storyTimer = setTimeout(typeStory, entry.pause);
+        return;
+      }
+
+      const p = document.getElementById('sl' + storyIdx);
+      p.textContent += entry.text[storyCharIdx];
+      playTypeBeep();
+      storyCharIdx++;
+
+      if (storyCharIdx >= entry.text.length) {
+        storyIdx++; storyCharIdx = 0;
+        storyTimer = setTimeout(typeStory, entry.pause);
+      } else {
+        storyTimer = setTimeout(typeStory, 38);
+      }
+    }
+
+    function finishStory() {
+      storyDone = true;
+      document.getElementById('narrative-prompt').style.visibility = 'visible';
+    }
+
+    function skipStory() {
+      clearTimeout(storyTimer);
+      const linesEl = document.getElementById('narrative-lines');
+      linesEl.innerHTML = '';
+      STORY.forEach((entry, i) => {
+        const p = document.createElement('p');
+        if (entry.hl) p.className = 'hl';
+        p.textContent = entry.text;
+        linesEl.appendChild(p);
+      });
+      finishStory();
+    }
+
+    function beginGame() {
+      narrativeScreen.classList.add('hidden');
+      audioCtx.resume();
+      resetGame();
+      state = 'playing';
+      startMusic();
+    }
 
     canvas.addEventListener('click', () => {
-      if (state === 'idle' || state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; startMusic(); }
+      if (state === 'idle') { startNarrative(); }
+      else if (state === 'narrative') { if (!storyDone) skipStory(); else beginGame(); }
+      else if (state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; startMusic(); }
     });
 
     document.addEventListener('keydown', e => {
       keys[e.key] = true;
-      const arrows = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];
+      const arrows = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','W','s','S','a','A','d','D'];
       if ([...arrows, ' '].includes(e.key)) e.preventDefault();
 
       if (e.key === ' ') {
-        if (state === 'idle' || state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; startMusic(); }
+        if (state === 'idle') { startNarrative(); }
+        else if (state === 'narrative') { if (!storyDone) skipStory(); else beginGame(); }
+        else if (state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; startMusic(); }
         else if (state === 'playing') {
           state = 'paused';
           stopShieldSound(); stopChargingSound(); shieldIsOn = false;
@@ -754,8 +1028,8 @@
     document.addEventListener('keyup', e => {
       keys[e.key] = false;
 
-      // Fire charged shot when releasing →
-      if ((e.key === 'ArrowRight') && isPlayerCharging) {
+      // Fire charged shot when releasing → or D
+      if ((e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') && isPlayerCharging) {
         firePlayerBullet(playerChargeLevel);
         isPlayerCharging = false;
         playerChargeLevel = 0;
@@ -772,7 +1046,6 @@
       document.getElementById('score-ai').textContent = 0;
       player.y = H / 2 - PADDLE_H / 2;
       ai.y     = H / 2 - PADDLE_H / 2;
-      mouseY   = H / 2;
       playerBullets = []; aiBullets = [];
       aiHoles = []; playerHoles = [];
       particles = [];
@@ -873,7 +1146,7 @@
       codeKeys[e.code] = false;
 
       // Fire charged shot when releasing Numpad6
-      if ((e.code === 'Numpad6') && isPlayerCharging) {
+      if ((e.code === 'Numpad6' || e.code === 'KeyD') && isPlayerCharging) {
         firePlayerBullet(playerChargeLevel);
         isPlayerCharging = false;
         playerChargeLevel = 0;
@@ -888,16 +1161,11 @@
     // Rewrite updatePlayer cleanly now that codeKeys is defined
     // (overwrite previous definition)
     window._updatePlayer = function() {
-      const kUp   = keys['ArrowUp']   || codeKeys['Numpad8'];
-      const kDown = keys['ArrowDown'] || codeKeys['Numpad2'];
+      const kUp   = keys['ArrowUp']   || keys['w'] || keys['W'] || codeKeys['Numpad8'];
+      const kDown = keys['ArrowDown'] || keys['s'] || keys['S'] || codeKeys['Numpad2'];
 
-      if (kUp || kDown) {
-        if (kUp)   player.y -= KEY_PADDLE_SPEED;
-        if (kDown) player.y += KEY_PADDLE_SPEED;
-        mouseY = player.y + PADDLE_H / 2;
-      } else {
-        player.y = mouseY - PADDLE_H / 2;
-      }
+      if (kUp)   player.y -= KEY_PADDLE_SPEED;
+      if (kDown) player.y += KEY_PADDLE_SPEED;
       player.y = Math.max(0, Math.min(H - PADDLE_H, player.y));
     };
 
@@ -910,7 +1178,7 @@
     }
 
     function tryPlayerShoot() {
-      const shootKeyPressed = keys['ArrowRight'] || codeKeys['Numpad6'];
+      const shootKeyPressed = keys['ArrowRight'] || keys['d'] || keys['D'] || codeKeys['Numpad6'];
 
       // Start charging if key pressed and not already charging
       if (shootKeyPressed && !isPlayerCharging) {
@@ -962,7 +1230,7 @@
 
     function updateShieldState() {
       const now  = performance.now();
-      const wants = keys['ArrowLeft'] || codeKeys['Numpad4'];
+      const wants = keys['ArrowLeft'] || keys['a'] || keys['A'] || codeKeys['Numpad4'];
       const canActivate = now >= shieldReadyTime;
       const wasOn = shieldIsOn;
       // Arm a new activation window when key is first pressed and cooldown is done
@@ -1128,7 +1396,9 @@
       const angle  = hitPos * Math.PI * 0.65;
       ball.speed = Math.min(ball.speed + 0.3, 14);
       const dir = paddle === player ? 1 : -1;
-      ball.vx = dir * ball.speed * Math.cos(angle);
+      // Use Math.abs to guarantee vx always points away from the paddle —
+      // without this, angles > π/2 (extreme paddle edges) invert vx and trap the ball.
+      ball.vx = dir * Math.abs(ball.speed * Math.cos(angle));
       ball.vy = ball.speed * Math.sin(angle);
     }
 
@@ -1491,9 +1761,8 @@
       drawShieldCrackle();
       updateFrenzyCounter();
       if (state !== 'idle') { drawTrail(); drawBall(); drawParticles(); drawBullets(); }
-      drawFrenzyEdgeText();
-      if (state === 'idle')   drawOverlay('SPACE PONG', 'SPACE or Click to start');
-      else if (state === 'paused') drawOverlay('PAUSED', 'Press SPACE to resume');
+      sctx.clearRect(0, 0, SW, SH); // drawFrenzyEdgeText() suspended
+      if (state === 'paused') drawOverlay('PAUSED', 'Press SPACE to resume');
       else if (state === 'win')    drawOverlay(winnerText, 'SPACE or Click to play again', winReason);
 
       ctx.restore();
