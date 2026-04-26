@@ -31,8 +31,8 @@
       letter-spacing: 4px;
       line-height: 1;
     }
-    #score-player { flex: 1; text-align: center; }
-    #score-ai     { flex: 1; text-align: center; }
+    #score-player { flex: 0 0 130px; text-align: center; }
+    #score-ai     { flex: 0 0 130px; text-align: center; }
     #label-row {
       display: flex;
       width: 884px;
@@ -45,9 +45,9 @@
       text-shadow: 0 1px 6px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,0.9);
       line-height: 1;
     }
-    #label-player { flex: 1; text-align: center; white-space: nowrap; }
+    #label-player { flex: 0 0 130px; text-align: center; white-space: nowrap; }
     #label-spacer  { flex: 1; }
-    #label-ai     { flex: 1; text-align: center; white-space: nowrap; }
+    #label-ai     { flex: 0 0 130px; text-align: center; white-space: nowrap; }
     #frenzy-row {
       display: flex;
       width: 884px;
@@ -80,12 +80,27 @@
       100% { color: #ff0000; }
     }
     .rainbow-text {
-      animation: rainbowCycle 2s linear infinite;
       font-weight: bold;
-      font-size: 28px;
-      letter-spacing: 2px;
+      font-size: 22px;
+      letter-spacing: 3px;
       display: block;
+      text-align: center;
     }
+    .rainbow-char {
+      display: inline-block;
+      animation: rainbowCycle 1.8s linear infinite;
+    }
+    #rally-counter {
+      font-family: 'Fredoka One', cursive;
+      font-size: 22px;
+      letter-spacing: 2px;
+      text-align: center;
+      color: #fff;
+      visibility: hidden;
+      transition: color 0.4s ease;
+      margin-bottom: 4px;
+    }
+    #now-playing-label { margin-top: 6px; }
     .bg-layer {
       position: fixed; inset: 0;
       background-size: 100% 100%; background-position: center; background-repeat: no-repeat;
@@ -105,7 +120,7 @@
     #scrawl-canvas  { position: absolute; top: -14px; left: -14px; pointer-events: none; z-index: 4; }
     canvas { border: 2px solid #555; cursor: none; }
     #now-playing-center {
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
     #frenzy-countdown {
       font-size: 20px; font-weight: bold; color: #ff4; letter-spacing: 3px;
@@ -122,7 +137,7 @@
       font-size: 34px; color: #ddd; letter-spacing: 1px;
       text-align: center; font-family: 'Fredoka One', cursive;
       text-shadow: 0 1px 6px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,0.9);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; overflow: visible; padding-bottom: 4px;
     }
     #now-playing::before { content: '♪ '; }
     #now-playing::after  { content: ' ♪'; }
@@ -212,7 +227,21 @@
       gap: 5px;
     }
     .key-wrap .key-sub {
-      font-size: 10px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 1px;
+      text-transform: lowercase;
+      font-family: 'Courier New', monospace;
+    }
+    .cluster-footer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      margin-top: 12px;
+    }
+    .cluster-footer-label {
+      font-size: 12px;
       color: rgba(255,255,255,0.55);
       letter-spacing: 1px;
       text-transform: lowercase;
@@ -250,6 +279,67 @@
       z-index: 100; background: #05050f;
     }
     #narrative-screen.hidden { display: none; }
+    /* Animation sits at a fixed absolute position just above center, behind the text */
+    #narrative-anim {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -56%);
+      width: 500px; height: 330px;
+      pointer-events: none;
+    }
+    /* Text layer floats on top with dark backdrop for legibility */
+    #narrative-content {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: transparent;
+      transition: background 0.6s ease;
+      padding: 28px 52px;
+      border-radius: 10px;
+    }
+    .nem { display: block; line-height: 1; }
+    .earth-em { font-size: 110px; }
+    .other-em { font-size: 40px; }
+    /* Resting positions within 500×330 container */
+    #nw-earth { position: absolute; left: calc(50% - 55px); top: 110px; }
+    #nw-i1    { position: absolute; left: calc(50% - 20px);  top: 4px;   }
+    #nw-i2    { position: absolute; left: calc(50% - 200px); top: 22px;  }
+    #nw-i3    { position: absolute; left: calc(50% + 118px); top: 16px;  }
+    #nw-i4    { position: absolute; left: calc(50% - 225px); top: 148px; }
+    #nw-i5    { position: absolute; left: calc(50% + 145px); top: 148px; }
+    #nw-i6    { position: absolute; left: calc(50% - 115px); top: 265px; }
+    #nw-i7    { position: absolute; left: calc(50% + 72px);  top: 268px; }
+    /* Fly-in */
+    #nw-earth { animation: earthIn 0.9s ease-out 0.2s both; }
+    #nw-i1    { animation: iIn-t  1.2s cubic-bezier(0.1,0.85,0.3,1) 0.5s both; }
+    #nw-i2    { animation: iIn-tl 1.2s cubic-bezier(0.1,0.85,0.3,1) 0.8s both; }
+    #nw-i3    { animation: iIn-tr 1.2s cubic-bezier(0.1,0.85,0.3,1) 1.1s both; }
+    #nw-i4    { animation: iIn-l  1.2s cubic-bezier(0.1,0.85,0.3,1) 1.4s both; }
+    #nw-i5    { animation: iIn-r  1.2s cubic-bezier(0.1,0.85,0.3,1) 1.7s both; }
+    #nw-i6    { animation: iIn-bl 1.2s cubic-bezier(0.1,0.85,0.3,1) 2.0s both; }
+    #nw-i7    { animation: iIn-br 1.2s cubic-bezier(0.1,0.85,0.3,1) 2.3s both; }
+    /* Hover (inner emoji, starts after fly-in completes) */
+    .i1-hv { animation: hov1 2.2s ease-in-out 1.7s infinite; }
+    .i2-hv { animation: hov3 2.8s ease-in-out 2.0s infinite; }
+    .i3-hv { animation: hov2 2.5s ease-in-out 2.3s infinite; }
+    .i4-hv { animation: hov3 3.0s ease-in-out 2.6s infinite; }
+    .i5-hv { animation: hov1 2.4s ease-in-out 2.9s infinite; }
+    .i6-hv { animation: hov2 2.7s ease-in-out 3.2s infinite; }
+    .i7-hv { animation: hov3 2.3s ease-in-out 3.5s infinite; }
+    @keyframes earthIn {
+      from { transform: scale(0.3); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    @keyframes iIn-t  { from { transform: translate(0,-550px) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+    @keyframes iIn-tl { from { transform: translate(-750px,-300px) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+    @keyframes iIn-tr { from { transform: translate(750px,-250px) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+    @keyframes iIn-l  { from { transform: translate(-750px,0) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+    @keyframes iIn-r  { from { transform: translate(750px,0) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+    @keyframes iIn-bl { from { transform: translate(-650px,400px) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+    @keyframes iIn-br { from { transform: translate(650px,400px) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+    @keyframes hov1 { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-13px) rotate(4deg); } }
+    @keyframes hov2 { 0%,100% { transform: translateY(0) rotate(3deg); } 45% { transform: translateY(-15px) rotate(-3deg); } }
+    @keyframes hov3 { 0%,100% { transform: translateY(-5px) rotate(-2deg); } 55% { transform: translateY(8px) rotate(2deg); } }
     #narrative-lines {
       max-width: 620px; text-align: center;
       font-family: 'Courier New', monospace;
@@ -257,7 +347,8 @@
       line-height: 2.1; letter-spacing: 1px;
     }
     #narrative-lines p { margin: 0; min-height: 2.1em; }
-    #narrative-lines p.hl { letter-spacing: 2px; font-size: 19px; animation: neonColorCycle 4s linear infinite; }
+    #narrative-lines p.hl    { letter-spacing: 2px; font-size: 19px; animation: neonColorCycle 4s linear infinite; }
+    #narrative-lines p.alien { font-family: 'Orbitron', monospace; font-size: 23px; letter-spacing: 2px; animation: neonColorCycle 4s linear infinite; }
     #narrative-prompt {
       margin-top: 52px;
       font-family: 'Courier New', monospace;
@@ -277,13 +368,25 @@
   <div id="bg-b" class="bg-layer"></div>
   <div id="frenzy-overlay"></div>
   <div id="narrative-screen" class="hidden">
-    <div id="narrative-lines"></div>
-    <div id="narrative-prompt">— PRESS SPACE TO BEGIN —</div>
+    <div id="narrative-anim">
+      <div id="nw-earth"><span class="nem earth-em">🌍</span></div>
+      <div id="nw-i1"><span class="nem other-em i1-hv">👾</span></div>
+      <div id="nw-i2"><span class="nem other-em i2-hv">👾</span></div>
+      <div id="nw-i3"><span class="nem other-em i3-hv">👾</span></div>
+      <div id="nw-i4"><span class="nem other-em i4-hv">👾</span></div>
+      <div id="nw-i5"><span class="nem other-em i5-hv">👾</span></div>
+      <div id="nw-i6"><span class="nem other-em i6-hv">👾</span></div>
+      <div id="nw-i7"><span class="nem other-em i7-hv">👾</span></div>
+    </div>
+    <div id="narrative-content">
+      <div id="narrative-lines"></div>
+      <div id="narrative-prompt">— PRESS SPACE TO BEGIN —</div>
+    </div>
   </div>
   <div id="start-screen">
     <h1 id="splash-title">SPACE PONG</h1>
     <div class="splash-subtitle">bullets · spin · frenzy · shields</div>
-    <div class="splash-prompt">Press Space or Click to Start</div>
+    <div class="splash-prompt">Press Spacebar to Start</div>
     <div class="splash-controls">
       <div class="key-clusters">
         <div class="key-cluster">
@@ -292,6 +395,10 @@
             <div class="key-wrap"><span class="key-sq">A</span><span class="key-sub">shield</span></div>
             <span class="key-sq">S</span>
             <div class="key-wrap"><span class="key-sq">D</span><span class="key-sub">shoot</span></div>
+          </div>
+          <div class="cluster-footer">
+            <span class="key-misc">5</span>
+            <span class="cluster-footer-label">mute</span>
           </div>
         </div>
         <div class="cluster-or">or</div>
@@ -302,15 +409,19 @@
             <span class="key-sq">↓</span>
             <div class="key-wrap"><span class="key-sq">→</span><span class="key-sub">shoot</span></div>
           </div>
+          <div class="cluster-footer">
+            <span class="key-misc">Space</span>
+            <span class="cluster-footer-label">pause</span>
+          </div>
         </div>
       </div>
-      <div><span class="key-misc">5</span> Mute &nbsp;&nbsp;&nbsp; <span class="key-misc">Space</span> Pause</div>
     </div>
   </div>
   <div id="scoreboard">
     <span id="score-player">0</span>
     <div id="now-playing-center">
       <div id="frenzy-countdown"></div>
+      <div id="rally-counter">● 0 hits</div>
       <div id="now-playing-label">Now Playing:</div>
       <div id="now-playing">♪ — ♪</div>
     </div>
@@ -329,7 +440,7 @@
     <canvas id="c"></canvas>
     <canvas id="scrawl-canvas" width="912" height="582"></canvas>
   </div>
-  <div id="keys-help">UP: W &nbsp;|&nbsp; DOWN: S &nbsp;|&nbsp; SHIELD: A &nbsp;|&nbsp; SHOOT: D &nbsp;|&nbsp; PAUSE: Space &nbsp;|&nbsp; MUTE: 5 &nbsp;|&nbsp; SLOWER: - &nbsp;|&nbsp; FASTER: +</div>
+  <div id="keys-help">SLOWER: - &nbsp;|&nbsp; FASTER: +</div>
 
   <script>
     // ─── Background images (NASA APOD) ───────────────────────────────────────
@@ -448,10 +559,10 @@
     const PADDLE_CURVE = 0.35; // spin multiplier based on hit position
     const KEY_PADDLE_SPEED = 11;
     const WIN_SCORE = 99;
-    const BULLET_R = 4, BULLET_SPEED = 9;
-    const HOLE_SIZE = 14, MAX_HOLES = 5;
+    const BULLET_R = 2, BULLET_SPEED = 9;
+    const HOLE_SIZE = 14, MAX_HOLES = 20;
     const SHOT_COOLDOWN = 700;
-    const AI_SHOT_MIN = 2500, AI_SHOT_MAX = 5000;
+    const AI_SHOT_MIN = 5000, AI_SHOT_MAX = 14000;
     const SHIELD_MAX_MS      = 5000;
     const SHIELD_RECHARGE_MS = 20000;
     const TRAIL_DURATION = 20000;
@@ -605,22 +716,22 @@
 
     function playAIShootSound() {
       const now = audioCtx.currentTime;
-      const dur = 0.35;
+      const dur = 0.5;
 
       const osc1 = audioCtx.createOscillator();
       osc1.type = 'sawtooth';
-      osc1.frequency.setValueAtTime(1200, now);
-      osc1.frequency.exponentialRampToValueAtTime(180, now + dur);
+      osc1.frequency.setValueAtTime(320, now);
+      osc1.frequency.exponentialRampToValueAtTime(40, now + dur);
 
       const osc2 = audioCtx.createOscillator();
       osc2.type = 'square';
-      osc2.frequency.setValueAtTime(800, now);
-      osc2.frequency.exponentialRampToValueAtTime(120, now + dur);
+      osc2.frequency.setValueAtTime(180, now);
+      osc2.frequency.exponentialRampToValueAtTime(30, now + dur);
 
       const sub = audioCtx.createOscillator();
       sub.type = 'sine';
-      sub.frequency.setValueAtTime(400, now);
-      sub.frequency.exponentialRampToValueAtTime(80, now + dur);
+      sub.frequency.setValueAtTime(90, now);
+      sub.frequency.exponentialRampToValueAtTime(28, now + dur);
 
       const filter = audioCtx.createBiquadFilter();
       filter.type = 'lowpass';
@@ -657,6 +768,63 @@
       gain.connect(audioCtx.destination);
       osc.start(t);
       osc.stop(t + 0.05);
+    }
+
+    function playThunderPaddleHit() {
+      const t = audioCtx.currentTime;
+      const intensity = Math.min(rallyCount / 20, 1);
+
+      // Sub boom — deeper and louder with rally
+      const sub = audioCtx.createOscillator();
+      sub.type = 'sine';
+      sub.frequency.setValueAtTime(90 - intensity * 55, t);
+      sub.frequency.exponentialRampToValueAtTime(18, t + 0.45);
+      const subG = audioCtx.createGain();
+      subG.gain.setValueAtTime(0.15 + intensity * 0.55, t);
+      subG.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      sub.connect(subG); subG.connect(audioCtx.destination);
+      sub.start(t); sub.stop(t + 0.55);
+
+      // Transient crack
+      const bufLen = Math.ceil(audioCtx.sampleRate * 0.06);
+      const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufLen);
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buf;
+      const noiseG = audioCtx.createGain();
+      noiseG.gain.setValueAtTime(0.1 + intensity * 0.45, t);
+      noiseG.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+      noise.connect(noiseG); noiseG.connect(audioCtx.destination);
+      noise.start(t);
+    }
+
+    function playScoreBoom() {
+      const t = audioCtx.currentTime;
+      const intensity = Math.min(rallyCount / 15, 1);
+      if (intensity < 0.1) return;
+
+      // Massive sub thud
+      const sub = audioCtx.createOscillator();
+      sub.type = 'sine';
+      sub.frequency.setValueAtTime(60 - intensity * 35, t);
+      sub.frequency.exponentialRampToValueAtTime(12, t + 0.7);
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.4 + intensity * 0.6, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+      sub.connect(g); g.connect(audioCtx.destination);
+      sub.start(t); sub.stop(t + 0.85);
+
+      // Rumble layer
+      const rumble = audioCtx.createOscillator();
+      rumble.type = 'sawtooth';
+      rumble.frequency.setValueAtTime(28, t);
+      rumble.frequency.exponentialRampToValueAtTime(8, t + 0.6);
+      const rg = audioCtx.createGain();
+      rg.gain.setValueAtTime(intensity * 0.3, t);
+      rg.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+      rumble.connect(rg); rg.connect(audioCtx.destination);
+      rumble.start(t); rumble.stop(t + 0.65);
     }
 
     function playBulletHitSound() {
@@ -908,7 +1076,9 @@
       { text: "Their fleet darkens the sky above every city on the planet.", hl: false, pause: 700 },
       { text: "", pause: 500 },
       { text: "Their message arrives in every language simultaneously:", hl: false, pause: 700 },
-      { text: "\"Send your champion. One game. Winner takes all.\"", hl: true, pause: 900 },
+      { text: "Send your champion.", alien: true, pause: 400 },
+      { text: "One game.", alien: true, pause: 400 },
+      { text: "Winner takes all.", alien: true, pause: 900 },
       { text: "", pause: 500 },
       { text: "Defeat — and Earth is erased from existence.", hl: false, pause: 700 },
       { text: "Victory — and humanity earns its place among the stars.", hl: false, pause: 700 },
@@ -929,17 +1099,21 @@
       document.getElementById('narrative-prompt').style.visibility = 'hidden';
       document.getElementById('narrative-lines').innerHTML = '';
       storyIdx = 0; storyCharIdx = 0; storyDone = false;
-      typeStory();
+      document.getElementById('narrative-content').style.background = 'transparent';
+      storyTimer = setTimeout(typeStory, 5000); // wait for animation (3.5s) + 1.5s pause
     }
 
     function typeStory() {
+      if (storyIdx === 0 && storyCharIdx === 0)
+        document.getElementById('narrative-content').style.background = 'rgba(5,5,15,0.45)';
       if (storyIdx >= STORY.length) { finishStory(); return; }
       const entry = STORY[storyIdx];
       const linesEl = document.getElementById('narrative-lines');
 
       if (storyCharIdx === 0) {
         const p = document.createElement('p');
-        if (entry.hl) p.className = 'hl';
+        if (entry.alien) p.className = 'alien';
+        else if (entry.hl) p.className = 'hl';
         p.id = 'sl' + storyIdx;
         linesEl.appendChild(p);
       }
@@ -970,11 +1144,13 @@
 
     function skipStory() {
       clearTimeout(storyTimer);
+      document.getElementById('narrative-content').style.background = 'rgba(5,5,15,0.45)';
       const linesEl = document.getElementById('narrative-lines');
       linesEl.innerHTML = '';
       STORY.forEach((entry, i) => {
         const p = document.createElement('p');
-        if (entry.hl) p.className = 'hl';
+        if (entry.alien) p.className = 'alien';
+        else if (entry.hl) p.className = 'hl';
         p.textContent = entry.text;
         linesEl.appendChild(p);
       });
@@ -1074,27 +1250,59 @@
       rallyCount = 0;
     }
 
-    function addHole(holesArr, paddle, hitY) {
-      if (holesArr.length >= MAX_HOLES) return;
-      const relY = hitY - paddle.y;
-      if (!holesArr.some(h => Math.abs(h - relY) < HOLE_SIZE + 2)) {
-        holesArr.push(relY);
-        if (holesArr.length >= MAX_HOLES) {
-          // Paddle destroyed — other team wins
-          const who = paddle === player ? 'CPU' : 'YOU';
-          state = 'win';
-          stopChargingSound();
-          winnerText = who === 'YOU' ? 'YOU WIN!' : 'CPU WINS!';
-          winReason  = who === 'YOU' ? 'CPU paddle destroyed by bullets' : 'Your paddle was shot to pieces';
-          syncMusicToState();
-        }
+    // depth/ry per power level: 0=tiny dent, 1=medium, 2=full penetration, 3=instant win
+    const SCAR = [
+      { depth: 3,  ry: 5  },
+      { depth: 7,  ry: 8  },
+      { depth: 15, ry: 10 }, // depth > PADDLE_W so ball can pass through
+    ];
+
+    function triggerPaddleDestroyed(paddle) {
+      const who = paddle === player ? 'CPU' : 'YOU';
+      state = 'win';
+      stopChargingSound();
+      winnerText = who === 'YOU' ? 'YOU WIN!' : 'CPU WINS!';
+      winReason  = who === 'YOU' ? 'CPU paddle destroyed by bullets' : 'Your paddle was shot to pieces';
+      syncMusicToState();
+    }
+
+    // Returns true only when every Y slice of the paddle is inside a penetrating cavity's
+    // visual extent (ry). Checks every 2px so the win matches exactly what the user sees.
+    function isPaddleDestroyed(holesArr) {
+      const penetrating = holesArr.filter(h => h.depth >= PADDLE_W);
+      if (penetrating.length === 0) return false;
+      for (let y = 0; y <= PADDLE_H; y += 2) {
+        if (!penetrating.some(h => Math.abs(y - h.relY) < h.ry)) return false;
       }
+      return true;
+    }
+
+    function addHole(holesArr, paddle, hitY, power = 0) {
+      const relY = hitY - paddle.y;
+      const p = SCAR[Math.min(power, 2)];
+
+      // Hit on existing cavity — deepen it
+      const existing = holesArr.find(h => Math.abs(h.relY - relY) < h.ry + 4);
+      if (existing) {
+        existing.depth  = Math.min(existing.depth + p.depth * 0.55, PADDLE_W * 1.4);
+        existing.ry     = Math.min(existing.ry    + p.ry    * 0.22, 14);
+        existing.wobble = (Math.random() - 0.5) * 3;
+        if (isPaddleDestroyed(holesArr)) triggerPaddleDestroyed(paddle);
+        return;
+      }
+
+      // New cavity in a fresh area
+      if (holesArr.length >= MAX_HOLES) return;
+      holesArr.push({ relY, depth: p.depth, ry: p.ry, wobble: (Math.random() - 0.5) * 3 });
+      if (isPaddleDestroyed(holesArr)) triggerPaddleDestroyed(paddle);
     }
 
     function isHole(holesArr, paddle, testY) {
-      return holesArr.some(relY => {
-        const absY = paddle.y + relY;
-        return testY >= absY - HOLE_SIZE / 2 && testY <= absY + HOLE_SIZE / 2;
+      return holesArr.some(hit => {
+        const dy = Math.abs(testY - (paddle.y + hit.relY));
+        if (dy >= hit.ry) return false;
+        // Elliptical depth at this Y — only penetrates where depth exceeds paddle width
+        return hit.depth * Math.sqrt(1 - (dy / hit.ry) ** 2) >= PADDLE_W;
       });
     }
 
@@ -1308,12 +1516,12 @@
       const shieldX = player.x + PADDLE_W + 2;
 
       playerBullets = playerBullets.filter(b => {
-        // Speed scales with power level (0-3): tap=1x, medium=1.5x, high=2x, full=3x
         const speedMultiplier_bullet = 1 + (b.power || 0) * 0.65;
+        const prevX = b.x;
         b.x += BULLET_SPEED * speedMultiplier * speedMultiplier_bullet;
         if (b.x > W) return false;
 
-        // Check ball deflection (circle-circle collision)
+        // Ball deflection (circle-circle)
         const dist = Math.hypot(b.x - ball.x, b.y - ball.y);
         if (dist < BULLET_R + BALL_R) {
           const impulse = 2.5 + (b.power || 0) * 1.5;
@@ -1324,20 +1532,12 @@
           return false;
         }
 
-        const inX = b.x + BULLET_R >= ai.x && b.x - BULLET_R <= ai.x + PADDLE_W;
+        // Line-crossing check — handles fast bullets that skip past thin paddle in one frame
+        const crossedFace = prevX < ai.x && b.x >= ai.x;
         const inY = b.y >= ai.y && b.y <= ai.y + PADDLE_H;
-        if (inX && inY) {
-          // Full power (level 3) bullets destroy the paddle immediately
-          if (b.power === 3) {
-            state = 'win';
-            stopChargingSound();
-            player.score += 10;
-            document.getElementById('score-player').textContent = player.score;
-            winnerText = 'YOU WIN!';
-            winReason = 'Paddle destroyed by full power shot!';
-            syncMusicToState();
-          } else if (!isHole(aiHoles, ai, b.y)) {
-            addHole(aiHoles, ai, b.y);
+        if (crossedFace && inY) {
+          if (!isHole(aiHoles, ai, b.y)) {
+            addHole(aiHoles, ai, b.y, b.power || 0);
             playBulletHitSound();
           }
           return false;
@@ -1346,10 +1546,11 @@
       });
 
       aiBullets = aiBullets.filter(b => {
+        const prevX = b.x;
         b.x -= BULLET_SPEED * speedMultiplier;
         if (b.x < 0) return false;
 
-        // Check ball deflection (circle-circle collision)
+        // Ball deflection (circle-circle)
         const dist = Math.hypot(b.x - ball.x, b.y - ball.y);
         if (dist < BULLET_R + BALL_R) {
           ball.vx -= 2.5;
@@ -1364,10 +1565,11 @@
           const inSY = b.y >= player.y && b.y <= player.y + PADDLE_H;
           if (inSX && inSY) { playShieldBlockSound(); return false; }
         }
-        const inX = b.x - BULLET_R <= player.x + PADDLE_W && b.x + BULLET_R >= player.x;
+        // Line-crossing check on the player paddle's right face
+        const crossedFace = prevX > player.x + PADDLE_W && b.x <= player.x + PADDLE_W;
         const inY = b.y >= player.y && b.y <= player.y + PADDLE_H;
-        if (inX && inY) {
-          if (!isHole(playerHoles, player, b.y)) { addHole(playerHoles, player, b.y); playBulletHitSound(); }
+        if (crossedFace && inY) {
+          if (!isHole(playerHoles, player, b.y)) { addHole(playerHoles, player, b.y, 0); playBulletHitSound(); }
           return false;
         }
         return true;
@@ -1440,32 +1642,36 @@
       if (ball.y + BALL_R >= H) { ball.y = H - BALL_R; ball.vy = -Math.abs(ball.vy); playFloorCeilingSound(); }
 
       if (ball.vx < 0 && collidesWithPaddle(player)) {
-        ball.x = player.x + PADDLE_W + BALL_R; reflect(player); playPaddleSound(); spawnHitParticles(ball.x, ball.y, 1);
+        ball.x = player.x + PADDLE_W + BALL_R; reflect(player); spawnHitParticles(ball.x, ball.y, 1);
         rallyCount++;
-        shakeMagnitude = Math.min(1 + rallyCount * 0.4, 6);
-        shakeDuration = 6;
+        if (rallyCount >= 5) playThunderPaddleHit(); else playPaddleSound();
+        shakeMagnitude = Math.min(1 + rallyCount * 0.7, 18);
+        shakeDuration = Math.min(5 + Math.floor(rallyCount * 0.5), 18);
       }
       if (ball.vx > 0 && collidesWithPaddle(ai)) {
-        ball.x = ai.x - BALL_R; reflect(ai); playPaddleSound(); spawnHitParticles(ball.x, ball.y, -1);
+        ball.x = ai.x - BALL_R; reflect(ai); spawnHitParticles(ball.x, ball.y, -1);
         rallyCount++;
-        shakeMagnitude = Math.min(1 + rallyCount * 0.4, 6);
-        shakeDuration = 6;
+        if (rallyCount >= 5) playThunderPaddleHit(); else playPaddleSound();
+        shakeMagnitude = Math.min(1 + rallyCount * 0.7, 18);
+        shakeDuration = Math.min(5 + Math.floor(rallyCount * 0.5), 18);
       }
 
       if (ball.x - BALL_R < 0) {
         ai.score += trailActive ? TRAIL_SCORE_MULT : 1;
         document.getElementById('score-ai').textContent = ai.score;
         spawnScoreExplosion(0, ball.y, '#f74');
-        shakeMagnitude = 8;
-        shakeDuration = 14;
+        playScoreBoom();
+        shakeMagnitude = 8 + rallyCount * 0.8;
+        shakeDuration = 14 + rallyCount;
         checkWin('CPU');
         if (state === 'playing') launchBall(false);
       } else if (ball.x + BALL_R > W) {
         player.score += trailActive ? TRAIL_SCORE_MULT : 1;
         document.getElementById('score-player').textContent = player.score;
         spawnScoreExplosion(W, ball.y, '#4af');
-        shakeMagnitude = 8;
-        shakeDuration = 14;
+        playScoreBoom();
+        shakeMagnitude = 8 + rallyCount * 0.8;
+        shakeDuration = 14 + rallyCount;
         checkWin('YOU');
         if (state === 'playing') launchBall(true);
       }
@@ -1531,12 +1737,39 @@
 
       // Draw paddle body
       ctx.fillStyle = color;
-      ctx.shadowBlur = 0; // reset shadow
+      ctx.shadowBlur = 0;
       ctx.beginPath(); ctx.roundRect(paddle.x, paddle.y, PADDLE_W, PADDLE_H, 4); ctx.fill();
-      ctx.fillStyle = '#111';
-      holes.forEach(relY => {
-        ctx.fillRect(paddle.x, paddle.y + relY - HOLE_SIZE / 2, PADDLE_W, HOLE_SIZE);
-      });
+
+      // Draw cavities: erase paddle pixels then re-apply the field's dark overlay
+      // so the damaged sections look identical to the rest of the playing field.
+      const isAIPaddle = paddle === ai;
+      const faceX = isAIPaddle ? paddle.x : paddle.x + PADDLE_W;
+      const dir   = isAIPaddle ? 1 : -1;
+
+      const stampCavities = () => {
+        holes.forEach(hit => {
+          const cy    = paddle.y + hit.relY;
+          const depth = Math.min(hit.depth, PADDLE_W);
+          const ry    = hit.ry;
+          const w     = hit.wobble;
+          const backX = faceX + dir * depth;
+          ctx.beginPath();
+          ctx.moveTo(faceX, cy - ry);
+          ctx.bezierCurveTo(faceX + dir * depth * 0.55 + w, cy - ry * 0.85, backX + w * 0.6, cy - ry * 0.28, backX, cy);
+          ctx.bezierCurveTo(backX + w * 0.6, cy + ry * 0.28, faceX + dir * depth * 0.55 + w, cy + ry * 0.85, faceX, cy + ry);
+          ctx.closePath();
+          ctx.fill();
+        });
+      };
+
+      // Pass 1: erase the paddle colour (and dark bg) at cavity positions → fully transparent
+      ctx.globalCompositeOperation = 'destination-out';
+      stampCavities();
+      ctx.globalCompositeOperation = 'source-over';
+
+      // Pass 2: re-paint the same dark overlay the field uses → matches playing field exactly
+      ctx.fillStyle = 'rgba(17,17,17,0.85)';
+      stampCavities();
     }
 
     function drawShieldCrackle() {
@@ -1606,32 +1839,68 @@
 
     function drawBullets() {
       ctx.shadowBlur = 8;
-      ctx.fillStyle = '#ff0'; ctx.shadowColor = '#ff0';
-      playerBullets.forEach(b => { ctx.beginPath(); ctx.arc(b.x,b.y,BULLET_R,0,Math.PI*2); ctx.fill(); });
+      playerBullets.forEach(b => {
+        const r = BULLET_R + (b.power || 0) * 1.5;
+        ctx.fillStyle = '#ff0'; ctx.shadowColor = '#ff0';
+        ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI*2); ctx.fill();
+      });
       ctx.fillStyle = '#f60'; ctx.shadowColor = '#f60';
       aiBullets.forEach(b => { ctx.beginPath(); ctx.arc(b.x,b.y,BULLET_R,0,Math.PI*2); ctx.fill(); });
       ctx.shadowBlur = 0;
     }
 
     function ballHeatColor() {
-      if (rallyCount >= 10) return '#ff3300';   // hot red
-      if (rallyCount >= 5)  return '#ff9900';   // warm orange
-      return '#ffffff';                          // cool white
+      if (rallyCount >= 20) return '#ff00cc';
+      if (rallyCount >= 16) return '#ff0055';
+      if (rallyCount >= 12) return '#ff0000';
+      if (rallyCount >= 9)  return '#ff4400';
+      if (rallyCount >= 6)  return '#ff8800';
+      if (rallyCount >= 3)  return '#ffcc44';
+      return '#ffffff';
+    }
+
+    function drawBallCrackle(color) {
+      if (rallyCount < 10) return;
+      const intensity = Math.min((rallyCount - 10) / 12, 1);
+      const numSparks = 4 + Math.floor(intensity * 8);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8;
+      for (let i = 0; i < numSparks; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const segCount = 2 + Math.floor(Math.random() * 3);
+        const totalLen = 5 + Math.random() * (8 + intensity * 14);
+        const segLen = totalLen / segCount;
+        ctx.lineWidth = 0.5 + Math.random() * 1;
+        ctx.globalAlpha = 0.5 + Math.random() * 0.5;
+        ctx.beginPath();
+        let cx = ball.x + Math.cos(angle) * BALL_R;
+        let cy = ball.y + Math.sin(angle) * BALL_R;
+        ctx.moveTo(cx, cy);
+        let a = angle;
+        for (let s = 0; s < segCount; s++) {
+          a += (Math.random() - 0.5) * 1.8;
+          cx += Math.cos(a) * segLen;
+          cy += Math.sin(a) * segLen;
+          ctx.lineTo(cx, cy);
+        }
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
     }
 
     function drawBall() {
       // Afterimage trail — always on, independent of Rainbow Frenzy
+      const color = ballHeatColor();
       afterimageTrails.push({ x: ball.x, y: ball.y, life: 15, maxLife: 15 });
       for (let i = afterimageTrails.length - 1; i >= 0; i--) {
         const t = afterimageTrails[i];
-        const rallyHeat = Math.min(rallyCount / 15, 1);
-        const r = Math.round(255 - rallyHeat * 210);
-        const g = Math.round(255 - rallyHeat * 200);
-        const b = Math.round(255 - rallyHeat * 130);
         ctx.globalAlpha = (t.life / t.maxLife) * 0.4;
         ctx.fillStyle = trailEnabled
           ? ['#f00','#f80','#ff0','#0f0','#08f','#a0f'][i % 6]
-          : `rgb(${r},${g},${b})`;
+          : color;
         ctx.beginPath();
         ctx.arc(t.x, t.y, BALL_R * (t.life / t.maxLife), 0, Math.PI * 2);
         ctx.fill();
@@ -1640,15 +1909,12 @@
       }
       ctx.globalAlpha = 1;
 
-      const color = ballHeatColor();
-      const glow = rallyCount >= 10 ? 18 : rallyCount >= 5 ? 8 : 0;
-      if (glow > 0) {
-        ctx.shadowColor = color;
-        ctx.shadowBlur = glow;
-      }
+      const glow = Math.min(4 + rallyCount * 1.5, 30);
+      ctx.shadowColor = color; ctx.shadowBlur = glow;
       ctx.fillStyle = color;
       ctx.beginPath(); ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI*2); ctx.fill();
       ctx.shadowBlur = 0;
+      drawBallCrackle(color);
     }
 
     function drawTrail() {
@@ -1665,19 +1931,33 @@
     }
 
     function updateFrenzyCounter() {
-      const left     = document.getElementById('frenzy-left');
-      const right    = document.getElementById('frenzy-right');
+      const left      = document.getElementById('frenzy-left');
+      const right     = document.getElementById('frenzy-right');
       const countdown = document.getElementById('frenzy-countdown');
+      const rallyEl   = document.getElementById('rally-counter');
       left.style.visibility = 'hidden'; left.innerHTML = '';
       right.style.visibility = 'hidden'; right.innerHTML = '';
+
       if (!trailActive || state === 'win' || state === 'idle') {
         countdown.style.visibility = 'hidden';
-        return;
+      } else {
+        const remaining = state === 'paused' ? trailPausedRemaining : trailEndTime - performance.now();
+        const secs = Math.max(0, Math.ceil(remaining / 1000));
+        countdown.style.visibility = 'visible';
+        const frenzyChars = '✦ RAINBOW FRENZY ✦'.split('').map((ch, i) =>
+          `<span class="rainbow-char" style="animation-delay:-${(i * 0.1).toFixed(1)}s">${ch === ' ' ? '&nbsp;' : ch}</span>`
+        ).join('');
+        countdown.innerHTML = `<div class="rainbow-text">${frenzyChars}</div><div style="text-align:center">🌈⚡ <span style="font-size:28px">${secs}s</span> ⚡🌈</div>`;
       }
-      const remaining = state === 'paused' ? trailPausedRemaining : trailEndTime - performance.now();
-      const secs = Math.max(0, Math.ceil(remaining / 1000));
-      countdown.style.visibility = 'visible';
-      countdown.innerHTML = `<div class="rainbow-text">✦ RAINBOW FRENZY ✦</div><div>🌈⚡ <span style="font-size:32px">${secs}s</span> ⚡🌈</div>`;
+
+      // Rally counter — hidden during frenzy, hidden at 0, hidden on idle/win
+      if (trailActive || state === 'idle' || state === 'win' || rallyCount === 0) {
+        rallyEl.style.visibility = 'hidden';
+      } else {
+        rallyEl.style.visibility = 'visible';
+        rallyEl.style.color = ballHeatColor();
+        rallyEl.textContent = `● ${rallyCount} ${rallyCount === 1 ? 'hit' : 'hits'}`;
+      }
     }
 
     function drawFrenzyEdgeText() {
