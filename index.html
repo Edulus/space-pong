@@ -154,7 +154,7 @@
       align-items: center;
       justify-content: center;
       z-index: 100;
-      background: #05050f;
+      background: transparent;
       pointer-events: all;
     }
     #start-screen.hidden { display: none; }
@@ -272,11 +272,16 @@
       83%  { color: #c8f; text-shadow: 0 0 2px #fff, 0 0 8px #80f, 0 0 22px rgba(150,0,255,0.6); }
       100% { color: #f88; text-shadow: 0 0 2px #fff, 0 0 8px #f44, 0 0 22px rgba(255,50,50,0.6); }
     }
+    #star-canvas {
+      position: fixed; inset: 0; z-index: 100;
+      background: #05050f; pointer-events: none;
+      display: none;
+    }
     #narrative-screen {
       position: fixed; inset: 0;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      z-index: 100; background: #05050f;
+      z-index: 100; background: transparent;
     }
     #narrative-screen.hidden { display: none; }
     /* Animation sits at a fixed absolute position just above center, behind the text */
@@ -367,6 +372,7 @@
   <div id="bg-a" class="bg-layer"></div>
   <div id="bg-b" class="bg-layer"></div>
   <div id="frenzy-overlay"></div>
+  <canvas id="star-canvas"></canvas>
   <div id="narrative-screen" class="hidden">
     <div id="narrative-anim">
       <div id="nw-earth"><span class="nem earth-em">🌍</span></div>
@@ -457,6 +463,50 @@
     const bgB = document.getElementById('bg-b');
     const frenzyOverlay = document.getElementById('frenzy-overlay');
     let activeBg = bgA; // currently visible layer
+
+    // ─── Starfield (cutscene background) ─────────────────────────────────────
+    const starCanvas = document.getElementById('star-canvas');
+    const starCtx = starCanvas.getContext('2d');
+    const STARS = Array.from({length: 220}, () => ({
+      x: Math.random(), y: Math.random(),
+      r: Math.random() < 0.85 ? 0.4 + Math.random() * 0.8 : 1.0 + Math.random() * 1.0,
+      base: 0.15 + Math.random() * 0.55,
+      speed: 0.3 + Math.random() * 1.4,
+      phase: Math.random() * Math.PI * 2
+    }));
+
+    function resizeStarCanvas() {
+      starCanvas.width = window.innerWidth;
+      starCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeStarCanvas);
+    resizeStarCanvas();
+
+    let starRaf = null;
+    function renderStars(ts) {
+      const w = starCanvas.width, h = starCanvas.height;
+      starCtx.clearRect(0, 0, w, h);
+      for (const s of STARS) {
+        const alpha = s.base * (0.75 + 0.25 * Math.sin(ts * 0.001 * s.speed + s.phase));
+        starCtx.globalAlpha = alpha;
+        starCtx.fillStyle = '#fff';
+        starCtx.beginPath();
+        starCtx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2);
+        starCtx.fill();
+      }
+      starCtx.globalAlpha = 1;
+      starRaf = requestAnimationFrame(renderStars);
+    }
+
+    function showStarCanvas() {
+      starCanvas.style.display = '';
+      if (!starRaf) starRaf = requestAnimationFrame(renderStars);
+    }
+    function hideStarCanvas() {
+      starCanvas.style.display = 'none';
+      if (starRaf) { cancelAnimationFrame(starRaf); starRaf = null; }
+    }
+    showStarCanvas(); // visible on page load (idle state)
 
     function applyNextBackground() {} // no-op stub — resetGame calls this safely
 
@@ -1159,6 +1209,7 @@
 
     function beginGame() {
       narrativeScreen.classList.add('hidden');
+      hideStarCanvas();
       audioCtx.resume();
       resetGame();
       state = 'playing';
