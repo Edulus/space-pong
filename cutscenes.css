@@ -1,0 +1,519 @@
+/* ─── Cutscene screens (intro narrative, future defeat/victory) ─────────────
+   Shared emoji aesthetic: globe + space invaders, fly-in + hover animations.
+   @keyframes hov1/hov2/hov3 and iIn-* are reused across all three cutscenes.
+   neonColorCycle is defined in index.html and accessible here globally.
+   ──────────────────────────────────────────────────────────────────────── */
+
+/* ── Narrative screen container ── */
+#narrative-screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 100; background: transparent;
+}
+#narrative-screen.hidden { display: none; }
+
+/* Animation layer — fixed position just above centre, behind the text */
+#narrative-anim {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -56%);
+  width: 500px; height: 330px;
+  pointer-events: none;
+}
+
+/* Text layer floats on top with dark backdrop for legibility */
+#narrative-content {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: transparent;
+  transition: background 0.6s ease;
+  padding: 28px 52px;
+  border-radius: 10px;
+}
+
+/* ── Shared emoji classes ── */
+.nem      { display: block; line-height: 1; }
+.earth-em { font-size: 110px; }
+.other-em { font-size: 40px; }
+
+/* ── Intro: resting positions within 500×330 container ── */
+#nw-earth { position: absolute; left: calc(50% - 55px); top: 110px; }
+#nw-i1    { position: absolute; left: calc(50% - 20px);  top: 4px;   }
+#nw-i2    { position: absolute; left: calc(50% - 158px); top: 22px;  }
+#nw-i3    { position: absolute; left: calc(50% + 118px); top: 16px;  }
+#nw-i4    { position: absolute; left: calc(50% - 185px); top: 148px; }
+#nw-i5    { position: absolute; left: calc(50% + 145px); top: 148px; }
+#nw-i6    { position: absolute; left: calc(50% - 115px); top: 265px; }
+#nw-i7    { position: absolute; left: calc(50% + 72px);  top: 268px; }
+
+/* ── Intro: fly-in (wrapper div) ── */
+#nw-earth { animation: earthIn 0.9s ease-out 0.2s both; }
+#nw-i1    { animation: iIn-t  1.2s cubic-bezier(0.1,0.85,0.3,1) 0.5s both; }
+#nw-i2    { animation: iIn-tl 1.2s cubic-bezier(0.1,0.85,0.3,1) 0.8s both; }
+#nw-i3    { animation: iIn-tr 1.2s cubic-bezier(0.1,0.85,0.3,1) 1.1s both; }
+#nw-i4    { animation: iIn-l  1.2s cubic-bezier(0.1,0.85,0.3,1) 1.4s both; }
+#nw-i5    { animation: iIn-r  1.2s cubic-bezier(0.1,0.85,0.3,1) 1.7s both; }
+#nw-i6    { animation: iIn-bl 1.2s cubic-bezier(0.1,0.85,0.3,1) 2.0s both; }
+#nw-i7    { animation: iIn-br 1.2s cubic-bezier(0.1,0.85,0.3,1) 2.3s both; }
+
+/* ── Intro: hover (inner emoji span, starts after fly-in) ── */
+.i1-hv { animation: hov1 2.2s ease-in-out 1.7s infinite; }
+.i2-hv { animation: hov3 2.8s ease-in-out 2.0s infinite; }
+.i3-hv { animation: hov2 2.5s ease-in-out 2.3s infinite; }
+.i4-hv { animation: hov3 3.0s ease-in-out 2.6s infinite; }
+.i5-hv { animation: hov1 2.4s ease-in-out 2.9s infinite; }
+.i6-hv { animation: hov2 2.7s ease-in-out 3.2s infinite; }
+.i7-hv { animation: hov3 2.3s ease-in-out 3.5s infinite; }
+
+/* ── Narrative text ── */
+#narrative-lines {
+  max-width: 620px; text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: 17px; color: #bbb;
+  line-height: 2.1; letter-spacing: 1px;
+}
+#narrative-lines p       { margin: 0; min-height: 2.1em; }
+#narrative-lines p.hl    { letter-spacing: 2px; font-size: 19px; animation: neonColorCycle 4s linear infinite; }
+#narrative-lines p.alien { font-family: 'Orbitron', monospace; font-size: 23px; letter-spacing: 2px; animation: neonColorCycle 4s linear infinite; }
+
+#narrative-prompt {
+  margin-top: 52px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px; letter-spacing: 4px;
+  color: rgba(255,255,255,0.4);
+  visibility: hidden;
+  animation: splashBlink 1.5s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Shared keyframes — reused across intro, defeat, and victory cutscenes
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes splashBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
+/* Globe appear */
+@keyframes earthIn {
+  from { transform: scale(0.3); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+/* Invader fly-ins from every direction */
+@keyframes iIn-t  { from { transform: translate(0,-550px) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes iIn-tl { from { transform: translate(-750px,-300px) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes iIn-tr { from { transform: translate(750px,-250px) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes iIn-l  { from { transform: translate(-750px,0) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes iIn-r  { from { transform: translate(750px,0) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes iIn-bl { from { transform: translate(-650px,400px) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes iIn-br { from { transform: translate(650px,400px) scale(0.2); opacity:0; } to { transform:none; opacity:1; } }
+
+/* Hover loops — three variants for visual variety */
+@keyframes hov1 { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-13px) rotate(4deg); } }
+@keyframes hov2 { 0%,100% { transform: translateY(0) rotate(3deg); } 45% { transform: translateY(-15px) rotate(-3deg); } }
+@keyframes hov3 { 0%,100% { transform: translateY(-5px) rotate(-2deg); } 55% { transform: translateY(8px) rotate(2deg); } }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Defeat cutscene — "Earth is erased from existence"
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Defeat screen container (same pattern as #narrative-screen) ── */
+#defeat-screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 100; background: transparent;
+}
+#defeat-screen.hidden { display: none; }
+
+/* Animation layer — absolute, positioned identically to #narrative-anim
+   so the globe lands at the same screen position as the intro cutscene. */
+#defeat-anim {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -56%);
+  width: 500px; height: 330px;
+  pointer-events: none;
+  animation: dSceneIn 0.5s ease-out both;
+}
+
+/* ── Resting positions — mirror intro exactly ── */
+#dw-earth { position: absolute; left: calc(50% - 55px); top: 110px; }
+#dw-i1    { position: absolute; left: calc(50% - 20px);  top: 4px;   }
+#dw-i2    { position: absolute; left: calc(50% - 158px); top: 22px;  }
+#dw-i3    { position: absolute; left: calc(50% + 118px); top: 16px;  }
+#dw-i4    { position: absolute; left: calc(50% - 185px); top: 148px; }
+#dw-i5    { position: absolute; left: calc(50% + 145px); top: 148px; }
+#dw-i6    { position: absolute; left: calc(50% - 115px); top: 265px; }
+#dw-i7    { position: absolute; left: calc(50% + 72px);  top: 268px; }
+
+/* ── Phase 0: Scene fades in — Earth and invaders already in orbit, no fly-in ── */
+@keyframes dSceneIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Phase 0: Earth waits, then gets destroyed ── */
+#dw-earth { animation:
+  dEarthShake 0.7s ease-in-out                   3.7s both,
+  dEarthFlash 0.35s linear                       4.5s 4 alternate both,
+  dEarthDie   0.7s cubic-bezier(0.55,0,1,0.45)  5.9s forwards; }
+
+/* ── Phase 0: Invaders hover continuously from the start ── */
+.di1-hv { animation: hov1 2.2s ease-in-out 0.0s infinite; }
+.di2-hv { animation: hov3 2.8s ease-in-out 0.3s infinite; }
+.di3-hv { animation: hov2 2.5s ease-in-out 0.6s infinite; }
+.di4-hv { animation: hov3 3.0s ease-in-out 0.2s infinite; }
+.di5-hv { animation: hov1 2.4s ease-in-out 0.4s infinite; }
+.di6-hv { animation: hov2 2.7s ease-in-out 0.1s infinite; }
+.di7-hv { animation: hov3 2.3s ease-in-out 0.5s infinite; }
+
+/* ── Phase 1 (2.5 s): convergence — invaders close in on Earth ──
+   ── Phase 2 (5.9 s): scatter   — invaders fly off in all directions ── */
+#dw-i1 { animation:
+  dConv-i1 1.0s cubic-bezier(0.4,0,0.2,1) 2.5s forwards,
+  dScat-i1 0.8s cubic-bezier(0.4,0,0.6,1) 5.9s forwards; }
+
+#dw-i2 { animation:
+  dConv-i2 1.0s cubic-bezier(0.4,0,0.2,1) 2.5s forwards,
+  dScat-i2 0.8s cubic-bezier(0.4,0,0.6,1) 5.9s forwards; }
+
+#dw-i3 { animation:
+  dConv-i3 1.0s cubic-bezier(0.4,0,0.2,1) 2.5s forwards,
+  dScat-i3 0.8s cubic-bezier(0.4,0,0.6,1) 5.9s forwards; }
+
+#dw-i4 { animation:
+  dConv-i4 1.0s cubic-bezier(0.4,0,0.2,1) 2.5s forwards,
+  dScat-i4 0.8s cubic-bezier(0.4,0,0.6,1) 5.9s forwards; }
+
+#dw-i5 { animation:
+  dConv-i5 1.0s cubic-bezier(0.4,0,0.2,1) 2.5s forwards,
+  dScat-i5 0.8s cubic-bezier(0.4,0,0.6,1) 5.9s forwards; }
+
+#dw-i6 { animation:
+  dConv-i6 1.0s cubic-bezier(0.4,0,0.2,1) 2.5s forwards,
+  dScat-i6 0.8s cubic-bezier(0.4,0,0.6,1) 5.9s forwards; }
+
+#dw-i7 { animation:
+  dConv-i7 1.0s cubic-bezier(0.4,0,0.2,1) 2.5s forwards,
+  dScat-i7 0.8s cubic-bezier(0.4,0,0.6,1) 5.9s forwards; }
+
+/* Convergence keyframes — 7 spots spread across Earth's surface (r≈45px ring).
+   Starting positions: i1=top-center, i2=top-left, i3=top-right,
+   i4=left, i5=right, i6=bottom-left, i7=bottom-right.
+   Each maps to a matching quadrant of the globe for even coverage. */
+@keyframes dConv-i1 {
+  from { transform: none;                                        opacity: 1; }
+  to   { transform: translate(0px, 119px) scale(0.55);           opacity: 0.85; }
+}
+@keyframes dConv-i2 {
+  from { transform: none;                                        opacity: 1; }
+  to   { transform: translate(119px, 112px) scale(0.55);         opacity: 0.85; }
+}
+@keyframes dConv-i3 {
+  from { transform: none;                                        opacity: 1; }
+  to   { transform: translate(-119px, 118px) scale(0.55);        opacity: 0.85; }
+}
+@keyframes dConv-i4 {
+  from { transform: none;                                        opacity: 1; }
+  to   { transform: translate(146px, 8px) scale(0.55);           opacity: 0.85; }
+}
+@keyframes dConv-i5 {
+  from { transform: none;                                        opacity: 1; }
+  to   { transform: translate(-146px, 8px) scale(0.55);          opacity: 0.85; }
+}
+@keyframes dConv-i6 {
+  from { transform: none;                                        opacity: 1; }
+  to   { transform: translate(95px, -98px) scale(0.55);          opacity: 0.85; }
+}
+@keyframes dConv-i7 {
+  from { transform: none;                                        opacity: 1; }
+  to   { transform: translate(-92px, -123px) scale(0.55);        opacity: 0.85; }
+}
+
+/* Scatter keyframes — from converged position, fly off screen at original full size */
+@keyframes dScat-i1 {
+  from { transform: translate(0px, 119px) scale(0.55);    opacity: 0.85; }
+  to   { transform: translate(0px, -600px) scale(1);      opacity: 0; }
+}
+@keyframes dScat-i2 {
+  from { transform: translate(119px, 112px) scale(0.55);  opacity: 0.85; }
+  to   { transform: translate(-850px, -350px) scale(1);   opacity: 0; }
+}
+@keyframes dScat-i3 {
+  from { transform: translate(-119px, 118px) scale(0.55); opacity: 0.85; }
+  to   { transform: translate(850px, -300px) scale(1);    opacity: 0; }
+}
+@keyframes dScat-i4 {
+  from { transform: translate(146px, 8px) scale(0.55);    opacity: 0.85; }
+  to   { transform: translate(-850px, 0px) scale(1);      opacity: 0; }
+}
+@keyframes dScat-i5 {
+  from { transform: translate(-146px, 8px) scale(0.55);   opacity: 0.85; }
+  to   { transform: translate(850px, 0px) scale(1);       opacity: 0; }
+}
+@keyframes dScat-i6 {
+  from { transform: translate(95px, -98px) scale(0.55);   opacity: 0.85; }
+  to   { transform: translate(-700px, 500px) scale(1);    opacity: 0; }
+}
+@keyframes dScat-i7 {
+  from { transform: translate(-92px, -123px) scale(0.55); opacity: 0.85; }
+  to   { transform: translate(700px, 500px) scale(1);     opacity: 0; }
+}
+
+/* ── Earth destruction keyframes (unchanged) ── */
+@keyframes dEarthShake {
+  0%   { transform: translate(0,0)      scale(1); }
+  15%  { transform: translate(-6px,4px) scale(1.05); }
+  30%  { transform: translate(7px,-5px) scale(1.05); }
+  45%  { transform: translate(-5px,6px) scale(1.08); }
+  60%  { transform: translate(6px,-4px) scale(1.05); }
+  75%  { transform: translate(-4px,5px) scale(1.02); }
+  100% { transform: translate(0,0)      scale(1); }
+}
+
+@keyframes dEarthFlash {
+  from { filter: brightness(1) saturate(1); }
+  to   { filter: brightness(4) saturate(0) drop-shadow(0 0 30px #fff); }
+}
+
+@keyframes dEarthDie {
+  0%   { transform: scale(1);    opacity: 1; filter: brightness(1); }
+  30%  { transform: scale(1.15); opacity: 1; filter: brightness(6) drop-shadow(0 0 40px #fff); }
+  100% { transform: scale(0);    opacity: 0; filter: brightness(8) drop-shadow(0 0 80px #fff); }
+}
+
+/* ── Collision flash: appears at moment of impact, gone before skull ── */
+#dw-collision {
+  position: absolute;
+  left: calc(50% - 45px); top: 120px;
+  font-size: 90px; display: block; line-height: 1;
+  z-index: 4;
+  opacity: 0;
+  animation: dCollisionFlash 1.4s ease-out 5.9s forwards;
+}
+@keyframes dCollisionFlash {
+  0%   { opacity: 1; transform: scale(0.6); }
+  100% { opacity: 0; transform: scale(3);   }
+}
+
+/* ── Text types in, then skull drops in below it ── */
+#defeat-content {
+  position: absolute;
+  top: 58%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+#defeat-headline {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Orbitron', monospace;
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  text-align: center;
+  animation: neonColorCycle 3s linear 7.0s infinite;
+}
+
+.d-typeline {
+  display: block;
+  white-space: nowrap;
+  clip-path: inset(0 100% 0 0);
+}
+
+/* ~65 ms per character; lines chain back-to-back */
+#d-line1 { animation: dType 0.60s steps(9, end) 7.00s forwards; }
+#d-line2 { animation: dType 0.15s steps(2, end) 7.65s forwards; }
+#d-line3 { animation: dType 0.45s steps(7, end) 7.85s forwards; }
+
+@keyframes dType { to { clip-path: inset(0 -200px 0 0); } }
+
+/* Skull sits at earth's position, underneath the explosion, revealed as it fades */
+#dw-skull {
+  position: absolute;
+  left: calc(50% - 37px); top: 128px;
+  font-size: 74px; display: block; line-height: 1;
+  z-index: 2;
+  opacity: 0;
+  animation:
+    dSkullUnder 0.3s ease-out  5.9s forwards,
+    hov2        2.8s ease-in-out 7.5s infinite;
+}
+
+@keyframes dSkullUnder {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Match the intro's .hl line ("You are Earth's last hope.") styling.
+   Text is typed in via JS (see showDefeatScreen / defeat-preview.html script)
+   so each character plays the type-beep sound, mirroring the intro. */
+#defeat-subtitle,
+#defeat-line3 {
+  font-family: 'Courier New', monospace;
+  font-size: 22px;
+  letter-spacing: 2px;
+  line-height: 2.1;
+  color: #bbb;
+  min-height: 2.1em; /* hold space so the line below doesn't jump on first character */
+}
+
+#defeat-subtitle { animation: neonColorCycle 4s linear  9.8s infinite; }
+#defeat-line3    { animation: neonColorCycle 4s linear 11.5s infinite; }
+
+#defeat-prompt {
+  margin-top: 40px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px; letter-spacing: 4px;
+  color: rgba(255,255,255,0.4);
+  animation: dTextReveal 0.8s ease-out 12.5s both,
+             splashBlink 1.5s ease-in-out 13.3s infinite;
+  opacity: 0;
+}
+
+@keyframes dTextReveal {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Victory cutscene — "Earth is welcomed into the galactic community"
+   Provisional. Reuses shared keyframes (earthIn, iIn-*, hov1/2/3, dType,
+   dTextReveal, splashBlink, neonColorCycle, dSceneIn).
+   ════════════════════════════════════════════════════════════════════════════ */
+
+#victory-screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 100; background: transparent;
+}
+#victory-screen.hidden { display: none; }
+
+/* Animation layer — same dimensions and globe-position as defeat/intro. */
+#victory-anim {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -56%);
+  width: 500px; height: 330px;
+  pointer-events: none;
+}
+
+/* Earth — already at rest, no zoom-in. Fades in with the scene via dSceneIn. */
+#vw-earth { position: absolute; left: calc(50% - 55px); top: 110px; }
+
+/* Phase 0: Invaders start in the exact same resting positions as the intro. */
+#vi-1 { position: absolute; left: calc(50% - 20px);  top: 4px;   }
+#vi-2 { position: absolute; left: calc(50% - 158px); top: 22px;  }
+#vi-3 { position: absolute; left: calc(50% + 118px); top: 16px;  }
+#vi-4 { position: absolute; left: calc(50% - 185px); top: 148px; }
+#vi-5 { position: absolute; left: calc(50% + 145px); top: 148px; }
+#vi-6 { position: absolute; left: calc(50% - 115px); top: 265px; }
+#vi-7 { position: absolute; left: calc(50% + 72px);  top: 268px; }
+
+/* Phase 1 (t=1.0s): invaders scatter away from Earth to off-screen. */
+#vi-1 { animation: vScat-i1 0.8s cubic-bezier(0.4,0,0.6,1) 1.0s forwards; }
+#vi-2 { animation: vScat-i2 0.8s cubic-bezier(0.4,0,0.6,1) 1.0s forwards; }
+#vi-3 { animation: vScat-i3 0.8s cubic-bezier(0.4,0,0.6,1) 1.0s forwards; }
+#vi-4 { animation: vScat-i4 0.8s cubic-bezier(0.4,0,0.6,1) 1.0s forwards; }
+#vi-5 { animation: vScat-i5 0.8s cubic-bezier(0.4,0,0.6,1) 1.0s forwards; }
+#vi-6 { animation: vScat-i6 0.8s cubic-bezier(0.4,0,0.6,1) 1.0s forwards; }
+#vi-7 { animation: vScat-i7 0.8s cubic-bezier(0.4,0,0.6,1) 1.0s forwards; }
+
+@keyframes vScat-i1 { from { transform: none; opacity: 1; } to { transform: translate(0px, -600px);       opacity: 0; } }
+@keyframes vScat-i2 { from { transform: none; opacity: 1; } to { transform: translate(-750px, -350px);   opacity: 0; } }
+@keyframes vScat-i3 { from { transform: none; opacity: 1; } to { transform: translate(750px, -300px);    opacity: 0; } }
+@keyframes vScat-i4 { from { transform: none; opacity: 1; } to { transform: translate(-800px, 0px);      opacity: 0; } }
+@keyframes vScat-i5 { from { transform: none; opacity: 1; } to { transform: translate(800px, 0px);       opacity: 0; } }
+@keyframes vScat-i6 { from { transform: none; opacity: 1; } to { transform: translate(-650px, 450px);    opacity: 0; } }
+@keyframes vScat-i7 { from { transform: none; opacity: 1; } to { transform: translate(650px, 450px);     opacity: 0; } }
+
+/* Phase 2 (t=2.5s): friends fly in after the invaders have scattered. */
+#vw-p1 { position: absolute; left: calc(50% - 20px);  top: 4px;   }
+#vw-p2 { position: absolute; left: calc(50% - 158px); top: 22px;  }
+#vw-p3 { position: absolute; left: calc(50% + 118px); top: 16px;  }
+#vw-p4 { position: absolute; left: calc(50% - 185px); top: 148px; }
+#vw-p5 { position: absolute; left: calc(50% + 145px); top: 148px; }
+#vw-p6 { position: absolute; left: calc(50% - 115px); top: 265px; }
+#vw-p7 { position: absolute; left: calc(50% + 72px);  top: 268px; }
+
+@keyframes vFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+#vw-p1 { animation: vFadeIn 0.8s ease-out 2.5s both; }
+#vw-p2 { animation: vFadeIn 0.8s ease-out 2.8s both; }
+#vw-p3 { animation: vFadeIn 0.8s ease-out 3.1s both; }
+#vw-p4 { animation: vFadeIn 0.8s ease-out 3.4s both; }
+#vw-p5 { animation: vFadeIn 0.8s ease-out 3.7s both; }
+#vw-p6 { animation: vFadeIn 0.8s ease-out 4.0s both; }
+#vw-p7 { animation: vFadeIn 0.8s ease-out 4.3s both; }
+
+/* Hover loops on the inner span, starting after each friend's fade-in. */
+.vp1-hv { animation: hov1 2.2s ease-in-out 3.3s infinite; }
+.vp2-hv { animation: hov3 2.8s ease-in-out 3.6s infinite; }
+.vp3-hv { animation: hov2 2.5s ease-in-out 3.9s infinite; }
+.vp4-hv { animation: hov3 3.0s ease-in-out 4.2s infinite; }
+.vp5-hv { animation: hov1 2.4s ease-in-out 4.5s infinite; }
+.vp6-hv { animation: hov2 2.7s ease-in-out 4.8s infinite; }
+.vp7-hv { animation: hov3 2.3s ease-in-out 5.1s infinite; }
+
+/* Phase 3 (t=5.5s): headline types in after last friend settles. */
+#victory-headline {
+  position: absolute;
+  top: 13%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Orbitron', monospace;
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  text-align: center;
+  animation: neonColorCycle 3s linear 2.5s infinite;
+}
+
+#v-line1 { animation: dType 0.50s steps(7,  end) 2.50s forwards; }
+#v-line2 { animation: dType 0.78s steps(12, end) 3.05s forwards; }
+
+/* Bottom text — typed in via JS at 7.0s. */
+#victory-content {
+  position: absolute;
+  top: 65%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+#victory-subtitle,
+#victory-line3 {
+  font-family: 'Courier New', monospace;
+  font-size: 22px;
+  letter-spacing: 2px;
+  line-height: 2.1;
+  color: #bbb;
+  min-height: 2.1em;
+}
+
+#victory-subtitle { animation: neonColorCycle 4s linear  5.5s infinite; }
+#victory-line3    { animation: neonColorCycle 4s linear  7.0s infinite; }
+
+#victory-prompt {
+  margin-top: 40px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px; letter-spacing: 4px;
+  color: rgba(255,255,255,0.4);
+  animation: dTextReveal 0.8s ease-out 9.5s both,
+             splashBlink 1.5s ease-in-out 10.3s infinite;
+  opacity: 0;
+}

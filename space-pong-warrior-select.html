@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Pong – Earth vs Aliens</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    height: 100vh;
+    background: #06080d;
+    color: #e0e6f0;
+    font-family: 'Rajdhani', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  #stars {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+  }
+
+  .screen {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 620px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .faction-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+
+  .faction-icon { font-size: 24px; line-height: 1; }
+
+  .faction-tag {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+
+  .faction-tag.earth {
+    color: #69f0ae;
+    border-color: rgba(105, 240, 174, 0.3);
+    background: rgba(105, 240, 174, 0.06);
+  }
+
+  .faction-tag.alien {
+    color: #b388ff;
+    border-color: rgba(179, 136, 255, 0.3);
+    background: rgba(179, 136, 255, 0.06);
+  }
+
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .phase-sub {
+    font-size: 12px;
+    color: #5a6a8a;
+    letter-spacing: 2px;
+    text-align: center;
+    margin-bottom: 4px;
+    font-family: 'Orbitron', sans-serif;
+    text-transform: uppercase;
+  }
+
+  .carousel-zone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .arrow-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.03);
+    color: #8a9abb;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .arrow-btn:hover {
+    border-color: var(--warrior-color, #fff);
+    color: var(--warrior-color, #fff);
+    background: rgba(255,255,255,0.06);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--warrior-color, #fff) 25%, transparent);
+  }
+
+  .arrow-btn:active { transform: scale(0.9); }
+
+  .warrior-card {
+    flex: 1;
+    max-width: 360px;
+    min-height: 400px;
+    background: linear-gradient(160deg, rgba(12,16,30,0.95), rgba(8,10,20,0.98));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 28px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.5s;
+  }
+
+  .warrior-card::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: -1px; right: -1px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--warrior-color), transparent);
+    border-radius: 20px 20px 0 0;
+  }
+
+  .paddle-stage {
+    position: relative;
+    width: 180px;
+    height: 120px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .paddle-glow {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--warrior-color) 25%, transparent), transparent 70%);
+    filter: blur(18px);
+    animation: glow-pulse 2.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow-pulse {
+    from { opacity: 0.5; transform: scale(0.9); }
+    to   { opacity: 1; transform: scale(1.1); }
+  }
+
+  .paddle-visual {
+    position: relative;
+    z-index: 1;
+    width: 20px;
+    height: 90px;
+    border-radius: 5px;
+    background: var(--warrior-color);
+    box-shadow:
+      0 0 10px color-mix(in srgb, var(--warrior-color) 60%, transparent),
+      0 0 25px color-mix(in srgb, var(--warrior-color) 30%, transparent),
+      inset 0 0 6px rgba(255,255,255,0.2);
+    transition: background 0.5s, box-shadow 0.5s;
+  }
+
+  .paddle-visual::before,
+  .paddle-visual::after {
+    content: '';
+    position: absolute;
+    width: 2px;
+    top: 5px;
+    bottom: 5px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 1px;
+  }
+  .paddle-visual::before { left: 4px; }
+  .paddle-visual::after  { right: 4px; }
+
+  .bullet-demo {
+    position: absolute;
+    z-index: 2;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px;
+    height: 90px;
+    pointer-events: none;
+  }
+
+  .warrior-name {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 18px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+    text-align: center;
+    transition: color 0.5s;
+  }
+
+  .warrior-weapon {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: #5a6a8a;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .warrior-lore {
+    font-size: 13px;
+    color: #7a8aaa;
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 14px;
+    min-height: 40px;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .stat-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: #4a5a7a;
+    text-transform: uppercase;
+  }
+
+  .stat-bar-track {
+    width: 50px;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .stat-bar-fill {
+    height: 100%;
+    background: var(--warrior-color);
+    border-radius: 2px;
+    transition: width 0.6s ease-out;
+  }
+
+  .test-fire-btn, .burst-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 8px 20px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: transparent;
+    color: #8a9abb;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-transform: uppercase;
+  }
+
+  .test-fire-btn:hover, .burst-btn:hover {
+    border-color: var(--warrior-color);
+    color: var(--warrior-color);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--warrior-color) 20%, transparent);
+  }
+
+  .test-fire-btn:active, .burst-btn:active { transform: scale(0.95); }
+
+  .burst-btn {
+    border-style: dashed;
+    font-size: 9px;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .select-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 3px;
+    padding: 12px 40px;
+    border: 2px solid var(--warrior-color);
+    background: transparent;
+    color: var(--warrior-color);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    margin-top: 16px;
+  }
+
+  .select-btn:hover {
+    background: var(--warrior-color);
+    color: #06080d;
+    box-shadow: 0 0 25px color-mix(in srgb, var(--warrior-color) 40%, transparent);
+  }
+
+  .select-btn:active { transform: scale(0.95); }
+
+  .counter {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .counter-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    transition: all 0.4s;
+  }
+
+  .warrior-card.slide-out-left  { animation: slideOutLeft 0.25s ease-in forwards; }
+  .warrior-card.slide-out-right { animation: slideOutRight 0.25s ease-in forwards; }
+  .warrior-card.slide-in-left   { animation: slideInLeft 0.25s ease-out forwards; }
+  .warrior-card.slide-in-right  { animation: slideInRight 0.25s ease-out forwards; }
+
+  @keyframes slideOutLeft  { to { transform: translateX(-70px); opacity: 0; } }
+  @keyframes slideOutRight { to { transform: translateX(70px); opacity: 0; } }
+  @keyframes slideInLeft   { from { transform: translateX(70px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes slideInRight  { from { transform: translateX(-70px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* Overlays */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: rgba(6,8,13,0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .overlay.show { display: flex; animation: fadeIn 0.4s ease-out; }
+
+  .overlay .big-text {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 28px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    animation: confirmPulse 0.6s ease-out;
+  }
+
+  .overlay .sub-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: #5a6a8a;
+    text-transform: uppercase;
+  }
+
+  .overlay .summary-text {
+    font-size: 14px;
+    color: #6a7a9a;
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes confirmPulse {
+    0%   { transform: scale(0.5); opacity: 0; }
+    60%  { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* VS Screen */
+  .vs-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: rgba(6,8,13,0.96);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .vs-overlay.show { display: flex; animation: fadeIn 0.5s ease-out; }
+
+  .vs-row {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+  }
+
+  .vs-fighter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .vs-paddle {
+    width: 18px;
+    height: 80px;
+    border-radius: 5px;
+    box-shadow: 0 0 15px currentColor;
+  }
+
+  .vs-fname {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .vs-fweapon {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #5a6a8a;
+  }
+
+  .vs-flabel {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    letter-spacing: 3px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid;
+  }
+
+  .vs-flabel.earth-label {
+    color: #69f0ae;
+    border-color: rgba(105,240,174,0.3);
+  }
+
+  .vs-flabel.alien-label {
+    color: #b388ff;
+    border-color: rgba(179,136,255,0.3);
+  }
+
+  .vs-text {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 42px;
+    letter-spacing: 6px;
+    background: linear-gradient(135deg, #69f0ae, #b388ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: confirmPulse 0.5s ease-out;
+  }
+
+  .vs-fight {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    letter-spacing: 6px;
+    color: #5a6a8a;
+    margin-top: 28px;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="screen" id="screen">
+  <div class="faction-banner">
+    <span class="faction-icon" id="factionIcon">🌍</span>
+    <span class="faction-tag earth" id="factionTag">Earth Defense</span>
+  </div>
+
+  <div class="phase-sub" id="phaseSub">Step 1 of 2</div>
+  <h1 id="phaseTitle">Choose Your Warrior</h1>
+
+  <div class="carousel-zone">
+    <button class="arrow-btn" id="prevBtn">◀</button>
+
+    <div class="warrior-card" id="card">
+      <div class="paddle-stage">
+        <div class="paddle-glow"></div>
+        <div class="paddle-visual"></div>
+        <div class="bullet-demo" id="bulletDemo"></div>
+      </div>
+      <div class="warrior-name" id="wName"></div>
+      <div class="warrior-weapon" id="wWeapon"></div>
+      <div class="warrior-lore" id="wLore"></div>
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-label">Power</div>
+          <div class="stat-bar-track"><div class="stat-bar-fill" id="statPower"></div></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Speed</div>
+          <div class="stat-bar-track"><div class="stat-bar-fill" id="statSpeed"></div></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Rate</div>
+          <div class="stat-bar-track"><div class="stat-bar-fill" id="statRate"></div></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Deflect</div>
+          <div class="stat-bar-track"><div class="stat-bar-fill" id="statDeflect"></div></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="test-fire-btn" id="testFireBtn">▶ Fire</button>
+        <button class="burst-btn" id="testBurstBtn">▶▶▶ Burst</button>
+      </div>
+    </div>
+
+    <button class="arrow-btn" id="nextBtn">▶</button>
+  </div>
+
+  <div class="counter" id="counter"></div>
+  <button class="select-btn" id="selectBtn">Lock In</button>
+</div>
+
+<div class="overlay" id="phaseOverlay">
+  <div class="big-text" id="overlayName"></div>
+  <div class="sub-text" id="overlaySub"></div>
+  <div class="summary-text" id="overlaySummary"></div>
+</div>
+
+<div class="vs-overlay" id="vsOverlay">
+  <div class="vs-row">
+    <div class="vs-fighter">
+      <div class="vs-flabel earth-label">Earth</div>
+      <div class="vs-paddle" id="vsEarthPaddle"></div>
+      <div class="vs-fname" id="vsEarthName"></div>
+      <div class="vs-fweapon" id="vsEarthWeapon"></div>
+    </div>
+    <div class="vs-text">VS</div>
+    <div class="vs-fighter">
+      <div class="vs-flabel alien-label">Alien</div>
+      <div class="vs-paddle" id="vsAlienPaddle"></div>
+      <div class="vs-fname" id="vsAlienName"></div>
+      <div class="vs-fweapon" id="vsAlienWeapon"></div>
+    </div>
+  </div>
+  <div class="vs-fight">Press any key to fight</div>
+</div>
+
+<script>
+// ── Starfield ──
+const canvas = document.getElementById('stars');
+const ctx2d = canvas.getContext('2d');
+let starsArr = [];
+function initStars() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  starsArr = Array.from({length: 150}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.2 + 0.3,
+    speed: Math.random() * 0.2 + 0.04,
+    flicker: Math.random() * Math.PI * 2
+  }));
+}
+function drawStars() {
+  ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+  const t = performance.now() * 0.001;
+  for (const s of starsArr) {
+    const alpha = 0.3 + 0.3 * Math.sin(t * 0.6 + s.flicker);
+    ctx2d.beginPath();
+    ctx2d.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx2d.fillStyle = `rgba(190,200,230,${alpha})`;
+    ctx2d.fill();
+    s.y += s.speed;
+    if (s.y > canvas.height + 2) { s.y = -2; s.x = Math.random() * canvas.width; }
+  }
+  requestAnimationFrame(drawStars);
+}
+initStars(); drawStars();
+window.addEventListener('resize', initStars);
+
+// ── Audio ──
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+// ═══════════════════════════════════════
+//  EARTH — pre-spacefaring human tech
+// ═══════════════════════════════════════
+const earthWarriors = [
+  {
+    name: "Kira",
+    weapon: "Slug Cannon",
+    color: "#ff4081",
+    lore: "Ex-artillery officer. Kinetic rounds — pure gunpowder and steel. What she lacks in finesse, she makes up in raw stopping power.",
+    power: 80, speed: 60, rate: 55, deflect: 65, burst: 3,
+    fire(ctx) {
+      const t = ctx.currentTime;
+      const bufSize = ctx.sampleRate * 0.08;
+      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+      const n = ctx.createBufferSource(); n.buffer = buf;
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.35, t);
+      ng.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(2500, t);
+      lp.frequency.exponentialRampToValueAtTime(400, t + 0.08);
+      n.connect(lp).connect(ng).connect(ctx.destination);
+      n.start(t); n.stop(t + 0.1);
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(180, t);
+      o.frequency.exponentialRampToValueAtTime(50, t + 0.1);
+      g.gain.setValueAtTime(0.3, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      o.connect(g).connect(ctx.destination);
+      o.start(t); o.stop(t + 0.14);
+    }
+  },
+  {
+    name: "Gorak",
+    weapon: "Railgun Mk I",
+    color: "#ffd740",
+    lore: "Built from scrapyard magnets and sheer stubbornness. Slow to charge, but nothing survives the impact. A garage-born doomsday device.",
+    power: 95, speed: 40, rate: 30, deflect: 40, burst: 2,
+    fire(ctx) {
+      const t = ctx.currentTime;
+      const w = ctx.createOscillator(), wg = ctx.createGain();
+      w.type = 'sawtooth';
+      w.frequency.setValueAtTime(120, t);
+      w.frequency.exponentialRampToValueAtTime(800, t + 0.12);
+      wg.gain.setValueAtTime(0.08, t);
+      wg.gain.linearRampToValueAtTime(0.2, t + 0.11);
+      wg.gain.setValueAtTime(0.001, t + 0.12);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1200;
+      w.connect(lp).connect(wg).connect(ctx.destination);
+      w.start(t); w.stop(t + 0.14);
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(200, t + 0.12);
+      o.frequency.exponentialRampToValueAtTime(30, t + 0.25);
+      g.gain.setValueAtTime(0.4, t + 0.12);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      o.connect(g).connect(ctx.destination);
+      o.start(t + 0.12); o.stop(t + 0.28);
+    }
+  },
+  {
+    name: "Pip",
+    weapon: "Nail Gun",
+    color: "#69f0ae",
+    lore: "Hardware store hero. Rapid-fire nails won't punch deep, but good luck getting a ball past this scrapper. Born to defend.",
+    power: 25, speed: 95, rate: 100, deflect: 95, burst: 7,
+    fire(ctx) {
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'square';
+      o.frequency.setValueAtTime(880, t);
+      o.frequency.setValueAtTime(660, t + 0.015);
+      o.frequency.setValueAtTime(440, t + 0.03);
+      g.gain.setValueAtTime(0.18, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+      o.connect(g).connect(ctx.destination);
+      o.start(t); o.stop(t + 0.06);
+    }
+  },
+  {
+    name: "Seren",
+    weapon: "EMP Launcher",
+    color: "#ff6e40",
+    lore: "Military engineer who jury-rigged an electromagnetic pulse into a weapon. Disrupts anything it touches. Solid all-rounder.",
+    power: 70, speed: 65, rate: 50, deflect: 75, burst: 4,
+    fire(ctx) {
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(400, t);
+      o.frequency.exponentialRampToValueAtTime(100, t + 0.12);
+      g.gain.setValueAtTime(0.2, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 600; bp.Q.value = 3;
+      o.connect(bp).connect(g).connect(ctx.destination);
+      o.start(t); o.stop(t + 0.16);
+      const bs = ctx.sampleRate * 0.06;
+      const buf = ctx.createBuffer(1, bs, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < bs; i++) d[i] = Math.random() * 2 - 1;
+      const n = ctx.createBufferSource(); n.buffer = buf;
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.15, t + 0.03);
+      ng.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+      n.connect(ng).connect(ctx.destination);
+      n.start(t + 0.03); n.stop(t + 0.11);
+    }
+  }
+];
+
+// ═══════════════════════════════════════
+//  ALIENS — advanced extraterrestrial tech
+// ═══════════════════════════════════════
+const alienWarriors = [
+  {
+    name: "Azurion",
+    weapon: "Plasma Bolt",
+    color: "#00e5ff",
+    lore: "Born from collapsing stars. Plasma bolts phase through matter — technology far beyond human comprehension.",
+    power: 55, speed: 85, rate: 80, deflect: 70, burst: 5,
+    fire(ctx) {
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(1800, t);
+      o.frequency.exponentialRampToValueAtTime(200, t + 0.12);
+      g.gain.setValueAtTime(0.35, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      o.connect(g).connect(ctx.destination);
+      o.start(t); o.stop(t + 0.15);
+    }
+  },
+  {
+    name: "Vex",
+    weapon: "Laser Whip",
+    color: "#7c4dff",
+    lore: "A rogue signal given physical form. Cracks a photonic whip that bends spacetime. Untouchable reflexes.",
+    power: 60, speed: 90, rate: 75, deflect: 85, burst: 4,
+    fire(ctx) {
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(2400, t);
+      o.frequency.exponentialRampToValueAtTime(120, t + 0.1);
+      g.gain.setValueAtTime(0.3, t);
+      g.gain.linearRampToValueAtTime(0.15, t + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+      o.connect(g).connect(ctx.destination);
+      o.start(t); o.stop(t + 0.18);
+    }
+  },
+  {
+    name: "Nyx",
+    weapon: "Void Spit",
+    color: "#b388ff",
+    lore: "Spits compressed dark matter. Each shot tears a micro-hole in spacetime. Unpredictable angles on defense.",
+    power: 70, speed: 70, rate: 60, deflect: 80, burst: 4,
+    fire(ctx) {
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator(), og = ctx.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(1000, t);
+      o.frequency.exponentialRampToValueAtTime(250, t + 0.08);
+      og.gain.setValueAtTime(0.2, t);
+      og.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 800; bp.Q.value = 5;
+      o.connect(bp).connect(og).connect(ctx.destination);
+      o.start(t); o.stop(t + 0.16);
+      const bs = ctx.sampleRate * 0.1;
+      const buf = ctx.createBuffer(1, bs, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < bs; i++) d[i] = Math.random() * 2 - 1;
+      const n = ctx.createBufferSource(); n.buffer = buf;
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.08, t + 0.02);
+      ng.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      const bp2 = ctx.createBiquadFilter(); bp2.type = 'bandpass';
+      bp2.frequency.setValueAtTime(1200, t);
+      bp2.frequency.exponentialRampToValueAtTime(400, t + 0.1);
+      bp2.Q.value = 8;
+      n.connect(bp2).connect(ng).connect(ctx.destination);
+      n.start(t + 0.02); n.stop(t + 0.14);
+    }
+  },
+  {
+    name: "Lyric",
+    weapon: "Harmonic Disruptor",
+    color: "#84ffff",
+    lore: "Weaponized frequency. Two tuned tones that shatter molecular bonds on resonance. Fast but fragile.",
+    power: 50, speed: 80, rate: 85, deflect: 55, burst: 5,
+    fire(ctx) {
+      const t = ctx.currentTime;
+      const o1 = ctx.createOscillator(), g1 = ctx.createGain();
+      o1.type = 'sine'; o1.frequency.value = 1320;
+      g1.gain.setValueAtTime(0.25, t);
+      g1.gain.exponentialRampToValueAtTime(0.001, t + 0.045);
+      o1.connect(g1).connect(ctx.destination);
+      o1.start(t); o1.stop(t + 0.05);
+      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+      o2.type = 'sine'; o2.frequency.value = 1980;
+      g2.gain.setValueAtTime(0.2, t + 0.04);
+      g2.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+      o2.connect(g2).connect(ctx.destination);
+      o2.start(t + 0.04); o2.stop(t + 0.1);
+    }
+  }
+];
+
+// ═══════════════════════════════════════
+//  GAME STATE & DOM
+// ═══════════════════════════════════════
+let phase = 'earth';
+let currentIdx = 0;
+let transitioning = false;
+let chosenEarth = null;
+let chosenAlien = null;
+
+function getRoster() { return phase === 'earth' ? earthWarriors : alienWarriors; }
+
+const card        = document.getElementById('card');
+const wName       = document.getElementById('wName');
+const wWeapon     = document.getElementById('wWeapon');
+const wLore       = document.getElementById('wLore');
+const statPower   = document.getElementById('statPower');
+const statSpeed   = document.getElementById('statSpeed');
+const statRate    = document.getElementById('statRate');
+const statDeflect = document.getElementById('statDeflect');
+const counterEl   = document.getElementById('counter');
+const bulletDemo  = document.getElementById('bulletDemo');
+
+function setColor(c) {
+  document.documentElement.style.setProperty('--warrior-color', c);
+  document.querySelectorAll('.arrow-btn').forEach(b => b.style.setProperty('--warrior-color', c));
+}
+
+function buildCounter(n) {
+  counterEl.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('div');
+    d.className = 'counter-dot';
+    counterEl.appendChild(d);
+  }
+}
+
+function renderWarrior(idx) {
+  const w = getRoster()[idx];
+  setColor(w.color);
+  wName.textContent = w.name;
+  wName.style.color = w.color;
+  wWeapon.textContent = `Weapon: ${w.weapon}`;
+  wLore.textContent = w.lore;
+
+  statPower.style.width = '0%';
+  statSpeed.style.width = '0%';
+  statRate.style.width = '0%';
+  statDeflect.style.width = '0%';
+  requestAnimationFrame(() => {
+    [statPower, statSpeed, statRate, statDeflect].forEach(el => el.style.background = w.color);
+    statPower.style.width = w.power + '%';
+    statSpeed.style.width = w.speed + '%';
+    statRate.style.width = w.rate + '%';
+    statDeflect.style.width = w.deflect + '%';
+  });
+
+  const paddle = card.querySelector('.paddle-visual');
+  paddle.style.background = w.color;
+  paddle.style.boxShadow = `0 0 10px ${w.color}88, 0 0 25px ${w.color}44, inset 0 0 6px rgba(255,255,255,0.2)`;
+
+  counterEl.querySelectorAll('.counter-dot').forEach((dot, i) => {
+    dot.style.background = i === idx ? w.color : 'rgba(255,255,255,0.1)';
+    dot.style.boxShadow = i === idx ? `0 0 8px ${w.color}` : 'none';
+  });
+
+  const btn = document.getElementById('selectBtn');
+  btn.style.setProperty('--warrior-color', w.color);
+  btn.style.borderColor = w.color;
+  btn.style.color = w.color;
+
+  // Update burst button label
+  document.getElementById('testBurstBtn').textContent = `▶▶▶ Burst (${w.burst}x)`;
+}
+
+function switchWarrior(dir) {
+  if (transitioning) return;
+  transitioning = true;
+  const roster = getRoster();
+  const outCls = dir > 0 ? 'slide-out-left' : 'slide-out-right';
+  const inCls  = dir > 0 ? 'slide-in-left'  : 'slide-in-right';
+  card.classList.add(outCls);
+  setTimeout(() => {
+    card.classList.remove(outCls);
+    currentIdx = (currentIdx + dir + roster.length) % roster.length;
+    renderWarrior(currentIdx);
+    card.classList.add(inCls);
+    setTimeout(() => { card.classList.remove(inCls); transitioning = false; }, 250);
+  }, 230);
+}
+
+function fireBulletVisual() {
+  const w = getRoster()[currentIdx];
+  const dir = phase === 'alien' ? -1 : 1;
+  const dot = document.createElement('div');
+  dot.style.cssText = `position:absolute;width:6px;height:6px;border-radius:50%;background:${w.color};box-shadow:0 0 6px ${w.color};left:50%;top:50%;opacity:1;pointer-events:none;`;
+  bulletDemo.appendChild(dot);
+  let x = 0;
+  const anim = () => {
+    x += 6;
+    dot.style.transform = `translate(calc(-50% + ${x * dir}px), -50%)`;
+    dot.style.opacity = Math.max(0, 1 - x / 100);
+    if (x < 110) requestAnimationFrame(anim); else dot.remove();
+  };
+  requestAnimationFrame(anim);
+}
+
+function setupPhase(p) {
+  phase = p;
+  currentIdx = 0;
+  const roster = getRoster();
+  buildCounter(roster.length);
+
+  document.getElementById('factionIcon').textContent = p === 'earth' ? '🌍' : '👾';
+  const tag = document.getElementById('factionTag');
+  tag.textContent = p === 'earth' ? 'Earth Defense' : 'Alien Invaders';
+  tag.className = `faction-tag ${p === 'earth' ? 'earth' : 'alien'}`;
+  document.getElementById('phaseSub').textContent = p === 'earth' ? 'Step 1 of 2' : 'Step 2 of 2';
+  document.getElementById('phaseTitle').textContent = p === 'earth' ? 'Choose Your Warrior' : 'Choose Your Opponent';
+
+  renderWarrior(0);
+}
+
+function showOverlay(name, color, sub, summary, duration, cb) {
+  const ov = document.getElementById('phaseOverlay');
+  document.getElementById('overlayName').textContent = name;
+  document.getElementById('overlayName').style.color = color;
+  document.getElementById('overlaySub').textContent = sub;
+  document.getElementById('overlaySummary').textContent = summary;
+  ov.classList.add('show');
+  setTimeout(() => { ov.classList.remove('show'); if (cb) cb(); }, duration);
+}
+
+function showVsScreen() {
+  document.getElementById('screen').style.display = 'none';
+  const ov = document.getElementById('vsOverlay');
+
+  document.getElementById('vsEarthName').textContent = chosenEarth.name;
+  document.getElementById('vsEarthName').style.color = chosenEarth.color;
+  document.getElementById('vsEarthWeapon').textContent = chosenEarth.weapon;
+  const ep = document.getElementById('vsEarthPaddle');
+  ep.style.background = chosenEarth.color;
+  ep.style.color = chosenEarth.color;
+
+  document.getElementById('vsAlienName').textContent = chosenAlien.name;
+  document.getElementById('vsAlienName').style.color = chosenAlien.color;
+  document.getElementById('vsAlienWeapon').textContent = chosenAlien.weapon;
+  const ap = document.getElementById('vsAlienPaddle');
+  ap.style.background = chosenAlien.color;
+  ap.style.color = chosenAlien.color;
+
+  ov.classList.add('show');
+  const ctx = getCtx();
+  chosenEarth.fire(ctx);
+  setTimeout(() => chosenAlien.fire(ctx), 300);
+}
+
+// ── Events ──
+document.getElementById('prevBtn').addEventListener('click', () => switchWarrior(-1));
+document.getElementById('nextBtn').addEventListener('click', () => switchWarrior(1));
+
+document.getElementById('testFireBtn').addEventListener('click', () => {
+  const ctx = getCtx();
+  getRoster()[currentIdx].fire(ctx);
+  fireBulletVisual();
+});
+
+document.getElementById('testBurstBtn').addEventListener('click', () => {
+  const ctx = getCtx();
+  const w = getRoster()[currentIdx];
+  for (let i = 0; i < w.burst; i++) {
+    setTimeout(() => {
+      w.fire(ctx);
+      fireBulletVisual();
+    }, i * 120);
+  }
+});
+
+document.getElementById('selectBtn').addEventListener('click', () => {
+  if (transitioning) return;
+  transitioning = true;
+  const w = getRoster()[currentIdx];
+  const ctx = getCtx();
+  w.fire(ctx);
+  setTimeout(() => w.fire(ctx), 120);
+  setTimeout(() => w.fire(ctx), 240);
+
+  if (phase === 'earth') {
+    chosenEarth = w;
+    showOverlay(w.name, w.color, 'Warrior Locked In', `${w.weapon} • Now choose your alien opponent...`, 2200, () => {
+      setupPhase('alien');
+      transitioning = false;
+    });
+  } else {
+    chosenAlien = w;
+    showOverlay(w.name, w.color, 'Opponent Locked In', w.weapon, 1600, () => {
+      showVsScreen();
+      transitioning = false;
+    });
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('vsOverlay').classList.contains('show')) return;
+  if (document.getElementById('phaseOverlay').classList.contains('show')) return;
+  if (e.key === 'ArrowLeft')  switchWarrior(-1);
+  if (e.key === 'ArrowRight') switchWarrior(1);
+  if (e.key === ' ') {
+    e.preventDefault();
+    getCtx(); getRoster()[currentIdx].fire(getCtx());
+    fireBulletVisual();
+  }
+  if (e.key === 'Enter') document.getElementById('selectBtn').click();
+});
+
+// ── Init ──
+setupPhase('earth');
+</script>
+</body>
+</html>

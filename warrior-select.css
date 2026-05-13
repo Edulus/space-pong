@@ -1,0 +1,339 @@
+/* ─── Warrior selection screen ─────────────────────────────────────────────
+   Two-phase carousel (Earth warrior, then Alien opponent) followed by a VS
+   screen. Sits between the narrative cutscene and gameplay. Uses the shared
+   #star-canvas as its backdrop, so the screen container is transparent.
+   ──────────────────────────────────────────────────────────────────────── */
+
+#warrior-select-screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 100; background: transparent;
+  font-family: 'Courier New', monospace;
+  color: #e0e6f0;
+  user-select: none;
+}
+#warrior-select-screen.hidden { display: none; }
+
+#warrior-select-screen .ws-inner {
+  width: 100%;
+  max-width: 620px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Faction banner ── */
+.ws-faction-banner {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  margin-bottom: 6px;
+}
+.ws-faction-icon { font-size: 52px; line-height: 1; margin-bottom: 2px; }
+.ws-faction-tag {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+  padding: 4px 14px; border-radius: 20px; border: 1px solid;
+}
+.ws-faction-tag.earth {
+  color: #69f0ae;
+  border-color: rgba(105, 240, 174, 0.3);
+  background: rgba(105, 240, 174, 0.06);
+}
+.ws-faction-tag.alien {
+  color: #b388ff;
+  border-color: rgba(179, 136, 255, 0.3);
+  background: rgba(179, 136, 255, 0.06);
+}
+
+/* ── Phase title ── */
+.ws-phase-sub {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+  color: #5a6a8a; text-align: center;
+  margin-bottom: 4px;
+}
+#warrior-select-screen h1 {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900; font-size: 22px; letter-spacing: 3px;
+  text-transform: uppercase; text-align: center;
+  margin-bottom: 24px;
+}
+
+/* ── Carousel zone ── */
+.ws-carousel-zone {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  width: 100%; margin-bottom: 20px;
+}
+.ws-arrow-btn {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.03);
+  color: #8a9abb;
+  font-family: 'Orbitron', monospace;
+  font-size: 20px; cursor: pointer;
+  transition: all 0.25s;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ws-arrow-btn:hover {
+  border-color: var(--ws-color, #fff);
+  color: var(--ws-color, #fff);
+  background: rgba(255,255,255,0.06);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--ws-color, #fff) 25%, transparent);
+}
+.ws-arrow-btn:active { transform: scale(0.9); }
+
+/* ── Warrior card ── */
+.ws-card {
+  flex: 1; max-width: 360px; min-height: 400px;
+  background: linear-gradient(160deg, rgba(12,16,30,0.95), rgba(8,10,20,0.98));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 28px 24px 24px;
+  display: flex; flex-direction: column; align-items: center;
+  position: relative; overflow: hidden;
+  transition: border-color 0.5s;
+}
+.ws-card::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px; right: -1px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--ws-color), transparent);
+  border-radius: 20px 20px 0 0;
+}
+
+/* ── Paddle preview ── */
+.ws-paddle-stage {
+  position: relative;
+  width: 180px; height: 120px;
+  margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ws-paddle-glow {
+  position: absolute;
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--ws-color) 25%, transparent), transparent 70%);
+  filter: blur(18px);
+  animation: wsGlowPulse 2.5s ease-in-out infinite alternate;
+}
+@keyframes wsGlowPulse {
+  from { opacity: 0.5; transform: scale(0.9); }
+  to   { opacity: 1;   transform: scale(1.1); }
+}
+.ws-paddle-visual {
+  position: relative; z-index: 1;
+  width: 20px; height: 90px;
+  border-radius: 5px;
+  background: var(--ws-color);
+  box-shadow:
+    0 0 10px color-mix(in srgb, var(--ws-color) 60%, transparent),
+    0 0 25px color-mix(in srgb, var(--ws-color) 30%, transparent),
+    inset 0 0 6px rgba(255,255,255,0.2);
+  transition: background 0.5s, box-shadow 0.5s;
+}
+.ws-paddle-visual::before,
+.ws-paddle-visual::after {
+  content: '';
+  position: absolute;
+  width: 2px; top: 5px; bottom: 5px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 1px;
+}
+.ws-paddle-visual::before { left: 4px; }
+.ws-paddle-visual::after  { right: 4px; }
+
+.ws-bullet-demo {
+  position: absolute; z-index: 2;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 180px; height: 90px;
+  pointer-events: none;
+}
+
+/* ── Card text ── */
+.ws-name {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900; font-size: 18px; letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 3px; text-align: center;
+  transition: color 0.5s;
+}
+.ws-weapon {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px; letter-spacing: 3px;
+  color: #5a6a8a; text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.ws-lore {
+  font-size: 13px; color: #7a8aaa;
+  text-align: center; line-height: 1.5;
+  margin-bottom: 14px;
+  min-height: 40px;
+}
+
+/* ── Stats ── */
+.ws-stats-row { display: flex; gap: 14px; margin-bottom: 16px; }
+.ws-stat { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.ws-stat-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  color: #4a5a7a;
+}
+.ws-stat-bar-track {
+  width: 50px; height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px; overflow: hidden;
+}
+.ws-stat-bar-fill {
+  height: 100%;
+  background: var(--ws-color);
+  border-radius: 2px;
+  transition: width 0.6s ease-out;
+}
+
+/* ── Buttons ── */
+.ws-test-fire-btn, .ws-burst-btn {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  padding: 8px 20px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: transparent;
+  color: #8a9abb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.ws-test-fire-btn:hover, .ws-burst-btn:hover {
+  border-color: var(--ws-color);
+  color: var(--ws-color);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--ws-color) 20%, transparent);
+}
+.ws-test-fire-btn:active, .ws-burst-btn:active { transform: scale(0.95); }
+.ws-burst-btn { border-style: dashed; font-size: 9px; }
+
+.ws-btn-row { display: flex; gap: 10px; }
+
+.ws-select-btn {
+  font-family: 'Orbitron', monospace;
+  font-weight: 700; font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
+  padding: 12px 40px;
+  border: 2px solid var(--ws-color);
+  background: transparent;
+  color: var(--ws-color);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 16px;
+}
+.ws-select-btn:hover {
+  background: var(--ws-color);
+  color: #06080d;
+  box-shadow: 0 0 25px color-mix(in srgb, var(--ws-color) 40%, transparent);
+}
+.ws-select-btn:active { transform: scale(0.95); }
+
+/* ── Counter dots ── */
+.ws-counter { display: flex; gap: 8px; margin-top: 12px; }
+.ws-counter-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  transition: all 0.4s;
+}
+
+/* ── Card slide transitions ── */
+.ws-card.slide-out-left  { animation: wsSlideOutLeft  0.25s ease-in forwards; }
+.ws-card.slide-out-right { animation: wsSlideOutRight 0.25s ease-in forwards; }
+.ws-card.slide-in-left   { animation: wsSlideInLeft   0.25s ease-out forwards; }
+.ws-card.slide-in-right  { animation: wsSlideInRight  0.25s ease-out forwards; }
+@keyframes wsSlideOutLeft  { to   { transform: translateX(-70px); opacity: 0; } }
+@keyframes wsSlideOutRight { to   { transform: translateX( 70px); opacity: 0; } }
+@keyframes wsSlideInLeft   { from { transform: translateX( 70px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes wsSlideInRight  { from { transform: translateX(-70px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* ── Confirmation overlay (between phase 1 → phase 2) ── */
+#warrior-select-overlay {
+  position: fixed; inset: 0; z-index: 110;
+  background: rgba(5,5,15,0.95);
+  display: none;
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 10px;
+}
+#warrior-select-overlay.show { display: flex; animation: wsFadeIn 0.4s ease-out; }
+.ws-overlay-name {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900; font-size: 28px; letter-spacing: 4px; text-transform: uppercase;
+  animation: wsConfirmPulse 0.6s ease-out;
+}
+.ws-overlay-sub {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+  color: #5a6a8a;
+}
+.ws-overlay-summary {
+  font-size: 14px; color: #6a7a9a;
+  margin-top: 8px; text-align: center;
+}
+@keyframes wsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes wsConfirmPulse {
+  0%   { transform: scale(0.5); opacity: 0; }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+/* ─── VS screen ───────────────────────────────────────────────────────────── */
+#vs-screen {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(5,5,15,0.96);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+  font-family: 'Courier New', monospace;
+  color: #e0e6f0;
+}
+#vs-screen.hidden { display: none; }
+
+.vs-row { display: flex; align-items: center; gap: 36px; }
+.vs-fighter { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.vs-paddle {
+  width: 18px; height: 80px;
+  border-radius: 5px;
+  box-shadow: 0 0 15px currentColor;
+}
+.vs-fname {
+  font-family: 'Orbitron', monospace;
+  font-weight: 700; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;
+}
+.vs-fweapon {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px; letter-spacing: 2px;
+  color: #5a6a8a;
+}
+.vs-flabel {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px; letter-spacing: 3px;
+  padding: 3px 10px; border-radius: 12px; border: 1px solid;
+}
+.vs-flabel.earth-label { color: #69f0ae; border-color: rgba(105,240,174,0.3); }
+.vs-flabel.alien-label { color: #b388ff; border-color: rgba(179,136,255,0.3); }
+
+.vs-text {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900; font-size: 42px; letter-spacing: 6px;
+  background: linear-gradient(135deg, #69f0ae, #b388ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: wsConfirmPulse 0.5s ease-out;
+}
+
+.vs-fight {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px; letter-spacing: 6px;
+  color: #5a6a8a;
+  margin-top: 28px;
+  animation: wsBlink 1s step-end infinite;
+}
+@keyframes wsBlink { 50% { opacity: 0; } }

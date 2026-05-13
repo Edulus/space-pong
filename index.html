@@ -6,6 +6,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="cutscenes.css">
+  <link rel="stylesheet" href="warrior-select.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -168,12 +170,26 @@
       animation: neonColorCycle 4s linear infinite;
     }
     #start-screen .splash-subtitle {
-      font-size: 13px;
-      color: rgba(255,255,255,0.65);
-      letter-spacing: 6px;
-      text-transform: uppercase;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
       margin-bottom: 48px;
+    }
+    .splash-feature {
+      font-family: 'Orbitron', monospace;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      animation: neonColorCycle 4s linear infinite;
+    }
+    .splash-feature:nth-child(1) { animation-delay:     0s; }
+    .splash-feature:nth-child(3) { animation-delay: -1.33s; }
+    .splash-feature:nth-child(5) { animation-delay: -2.00s; }
+    .splash-feature:nth-child(7) { animation-delay: -2.64s; }
+    .splash-sep {
+      color: rgba(255,255,255,0.25);
       font-family: 'Courier New', monospace;
+      font-size: 14px;
     }
     #start-screen .splash-prompt {
       font-size: 18px;
@@ -348,7 +364,9 @@
     }
     #narrative-lines p { margin: 0; min-height: 2.1em; }
     #narrative-lines p.hl    { letter-spacing: 2px; font-size: 19px; animation: neonColorCycle 4s linear infinite; }
+    #narrative-lines p.hl span { animation: none; color: #bbb; font-size: 17px; letter-spacing: 1px; }
     #narrative-lines p.alien { font-family: 'Orbitron', monospace; font-size: 23px; letter-spacing: 2px; animation: neonColorCycle 4s linear infinite; }
+    #narrative-lines p:not(.alien) + p.alien { margin-top: 1.05em; }
     #narrative-prompt {
       margin-top: 52px;
       font-family: 'Courier New', monospace;
@@ -389,9 +407,144 @@
       <div id="narrative-prompt">— PRESS SPACE TO BEGIN —</div>
     </div>
   </div>
+
+  <!-- Defeat cutscene template — Cutscenes.defeat.show() clones this. -->
+  <div id="defeat-screen" class="hidden">
+    <div id="defeat-headline">
+      <div class="d-typeline" id="d-line1">THE EARTH</div>
+      <div class="d-typeline" id="d-line2">IS</div>
+      <div class="d-typeline" id="d-line3">NO MORE</div>
+    </div>
+    <div id="defeat-anim">
+      <div id="dw-earth"><span class="nem earth-em">🌍</span></div>
+      <div id="dw-i1"><span class="nem other-em di1-hv">👾</span></div>
+      <div id="dw-i2"><span class="nem other-em di2-hv">👾</span></div>
+      <div id="dw-i3"><span class="nem other-em di3-hv">👾</span></div>
+      <div id="dw-i4"><span class="nem other-em di4-hv">👾</span></div>
+      <div id="dw-i5"><span class="nem other-em di5-hv">👾</span></div>
+      <div id="dw-i6"><span class="nem other-em di6-hv">👾</span></div>
+      <div id="dw-i7"><span class="nem other-em di7-hv">👾</span></div>
+      <div id="dw-skull">☠️</div>
+      <div id="dw-collision">💥</div>
+    </div>
+    <div id="defeat-content">
+      <div id="defeat-subtitle"></div>
+      <div id="defeat-line3"></div>
+      <div id="defeat-prompt">— PRESS SPACE TO TRY AGAIN —</div>
+    </div>
+  </div>
+
+  <!-- Victory cutscene template — Cutscenes.victory.show() clones this. -->
+  <div id="victory-screen" class="hidden">
+    <div id="victory-headline">
+      <div class="d-typeline" id="v-line1">WELCOME</div>
+      <div class="d-typeline" id="v-line2">TO THE STARS</div>
+    </div>
+    <div id="victory-anim">
+      <div id="vw-earth"><span class="nem earth-em">🌍</span></div>
+      <div id="vi-1"><span class="nem other-em di1-hv">👾</span></div>
+      <div id="vi-2"><span class="nem other-em di2-hv">👾</span></div>
+      <div id="vi-3"><span class="nem other-em di3-hv">👾</span></div>
+      <div id="vi-4"><span class="nem other-em di4-hv">👾</span></div>
+      <div id="vi-5"><span class="nem other-em di5-hv">👾</span></div>
+      <div id="vi-6"><span class="nem other-em di6-hv">👾</span></div>
+      <div id="vi-7"><span class="nem other-em di7-hv">👾</span></div>
+      <div id="vw-p1"><span class="nem other-em vp1-hv">🪐</span></div>
+      <div id="vw-p2"><span class="nem other-em vp2-hv">⭐</span></div>
+      <div id="vw-p3"><span class="nem other-em vp3-hv">🌟</span></div>
+      <div id="vw-p4"><span class="nem other-em vp4-hv">☀️</span></div>
+      <div id="vw-p5"><span class="nem other-em vp5-hv">🌕</span></div>
+      <div id="vw-p6"><span class="nem other-em vp6-hv">✨</span></div>
+      <div id="vw-p7"><span class="nem other-em vp7-hv">💫</span></div>
+    </div>
+    <div id="victory-content">
+      <div id="victory-subtitle"></div>
+      <div id="victory-line3"></div>
+      <div id="victory-prompt">— PRESS SPACE TO PLAY AGAIN —</div>
+    </div>
+  </div>
+
+  <!-- Warrior selection — WarriorSelect.show() clones this. -->
+  <div id="warrior-select-screen" class="hidden">
+    <div class="ws-inner">
+      <div class="ws-faction-banner">
+        <span class="ws-faction-icon">🌍</span>
+        <span class="ws-faction-tag earth">Earth Defense</span>
+      </div>
+      <div class="ws-phase-sub">Step 1 of 2</div>
+      <h1 class="ws-phase-title">Choose Your Warrior</h1>
+      <div class="ws-carousel-zone">
+        <button class="ws-arrow-btn ws-prev-btn" type="button">◀</button>
+        <div class="ws-card">
+          <div class="ws-paddle-stage">
+            <div class="ws-paddle-glow"></div>
+            <div class="ws-paddle-visual"></div>
+            <div class="ws-bullet-demo"></div>
+          </div>
+          <div class="ws-name"></div>
+          <div class="ws-weapon"></div>
+          <div class="ws-lore"></div>
+          <div class="ws-stats-row">
+            <div class="ws-stat ws-stat-power">
+              <div class="ws-stat-label">Power</div>
+              <div class="ws-stat-bar-track"><div class="ws-stat-bar-fill"></div></div>
+            </div>
+            <div class="ws-stat ws-stat-speed">
+              <div class="ws-stat-label">Speed</div>
+              <div class="ws-stat-bar-track"><div class="ws-stat-bar-fill"></div></div>
+            </div>
+            <div class="ws-stat ws-stat-rate">
+              <div class="ws-stat-label">Rate</div>
+              <div class="ws-stat-bar-track"><div class="ws-stat-bar-fill"></div></div>
+            </div>
+            <div class="ws-stat ws-stat-deflect">
+              <div class="ws-stat-label">Deflect</div>
+              <div class="ws-stat-bar-track"><div class="ws-stat-bar-fill"></div></div>
+            </div>
+          </div>
+          <div class="ws-btn-row">
+            <button class="ws-test-fire-btn" type="button">▶ Fire</button>
+            <button class="ws-burst-btn" type="button">>>> Burst</button>
+          </div>
+        </div>
+        <button class="ws-arrow-btn ws-next-btn" type="button">▶</button>
+      </div>
+      <div class="ws-counter"></div>
+      <button class="ws-select-btn" type="button">Lock In</button>
+    </div>
+  </div>
+
+  <!-- VS screen — WarriorSelect mounts this between selection and game start. -->
+  <div id="vs-screen" class="hidden">
+    <div class="vs-row">
+      <div class="vs-fighter">
+        <div class="vs-flabel earth-label">Earth</div>
+        <div class="vs-paddle vs-earth-paddle"></div>
+        <div class="vs-fname vs-earth-name"></div>
+        <div class="vs-fweapon vs-earth-weapon"></div>
+      </div>
+      <div class="vs-text">VS</div>
+      <div class="vs-fighter">
+        <div class="vs-flabel alien-label">Alien</div>
+        <div class="vs-paddle vs-alien-paddle"></div>
+        <div class="vs-fname vs-alien-name"></div>
+        <div class="vs-fweapon vs-alien-weapon"></div>
+      </div>
+    </div>
+    <div class="vs-fight">Press any key to skip</div>
+  </div>
+
   <div id="start-screen">
     <h1 id="splash-title">SPACE PONG</h1>
-    <div class="splash-subtitle">bullets · spin · frenzy · shields</div>
+    <div class="splash-subtitle">
+      <span class="splash-feature">BULLETS</span>
+      <span class="splash-sep">·</span>
+      <span class="splash-feature">SPIN</span>
+      <span class="splash-sep">·</span>
+      <span class="splash-feature">FRENZY</span>
+      <span class="splash-sep">·</span>
+      <span class="splash-feature">SHIELDS</span>
+    </div>
     <div class="splash-prompt">Press Spacebar to Start</div>
     <div class="splash-controls">
       <div class="key-clusters">
@@ -448,21 +601,21 @@
   </div>
   <div id="keys-help">SLOWER: - &nbsp;|&nbsp; FASTER: +</div>
 
+  <script src="cutscenes.js"></script>
+  <script src="warriors.js"></script>
+  <script src="warrior-select.js"></script>
   <script>
-    // ─── Background images (NASA APOD) ───────────────────────────────────────
-    const APOD_API_KEY = 'Fek6QhTkzvPLLA22pXlm1mJh5IRQTMq0ZwOsfzZN';
-    const APOD_COUNT   = 15;
+    // ─── Background images ────────────────────────────────────────────────────
     const BG_CYCLE_MS  = 30000;
 
     let bgImages = [];
-    let bgMeta   = []; // { title, copyright } — stored for future use
     let bgIndex  = 0;
     let bgCycleInterval = null;
 
     const bgA = document.getElementById('bg-a');
     const bgB = document.getElementById('bg-b');
     const frenzyOverlay = document.getElementById('frenzy-overlay');
-    let activeBg = bgA; // currently visible layer
+    let activeBg = bgA;
 
     function applyNextBackground() {} // no-op stub — resetGame calls this safely
 
@@ -496,10 +649,7 @@
     }
 
     const LOCAL_BG_COUNT = 105; // update if you add or remove images
-    const APOD_ENABLED   = false; // ← set to true to re-enable NASA API backgrounds
 
-    // Build the full list, shuffle it, and start immediately — no sequential probing.
-    // Change LOCAL_BG_COUNT above if the number of background files changes.
     function loadLocalImages() {
       const candidates = Array.from({ length: LOCAL_BG_COUNT },
                                     (_, i) => `backgrounds/background_${i + 1}.jpg`);
@@ -514,43 +664,16 @@
       function finalize() {
         if (--remaining > 0) return;
         bgImages = loaded;
-        bgMeta   = bgImages.map(() => ({ title: '', copyright: '' }));
         // Fisher-Yates shuffle for random order every session
         for (let i = bgImages.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [bgImages[i], bgImages[j]] = [bgImages[j], bgImages[i]];
-          [bgMeta[i],   bgMeta[j]]   = [bgMeta[j],   bgMeta[i]];
         }
         if (bgImages.length) startBgCycle();
       }
     }
 
     loadLocalImages();
-
-    // Step 2 — fetch NASA APOD in parallel; swap in if successful
-    const APOD_URL = `https://api.nasa.gov/planetary/apod?api_key=${APOD_API_KEY}&count=${APOD_COUNT}`;
-    if (APOD_ENABLED) console.log('[APOD] Fetching:', APOD_URL);
-
-    if (APOD_ENABLED) fetch(APOD_URL)
-      .then(r => {
-        console.log('[APOD] HTTP status:', r.status, r.statusText);
-        if (!r.ok) {
-          return r.text().then(body => { throw new Error(`APOD HTTP ${r.status}: ${body}`); });
-        }
-        return r.json();
-      })
-      .then(data => {
-        const images = data.filter(e => e.media_type === 'image');
-        if (!images.length) throw new Error('APOD batch contained no images');
-        bgImages = images.map(e => e.url);
-        bgMeta   = images.map(e => ({ title: e.title || '', copyright: e.copyright || '' }));
-        console.log('[APOD] Switched to NASA images:', bgImages.length);
-        startBgCycle(); // crossfades into first NASA image
-      })
-      .catch(err => {
-        console.error('[APOD] Fetch failed, keeping local images. Reason:', err.message);
-        // local images already loaded and cycling — nothing to do
-      });
 
     const canvas = document.getElementById('c');
     const ctx = canvas.getContext('2d');
@@ -564,7 +687,7 @@
     const PADDLE_W = 12, PADDLE_H = 90, BALL_R = 8;
     const PADDLE_CURVE = 0.35; // spin multiplier based on hit position
     const KEY_PADDLE_SPEED = 11;
-    const WIN_SCORE = 99;
+    const WIN_SCORE = 5;
     const BULLET_R = 2, BULLET_SPEED = 9;
     const HOLE_SIZE = 14, MAX_HOLES = 20;
     const SHOT_COOLDOWN = 700;
@@ -576,6 +699,8 @@
 
     // ─── Audio context ────────────────────────────────────────────────────────
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    Cutscenes.init(audioCtx);
+    WarriorSelect.init(audioCtx);
 
     // ─── SFX ─────────────────────────────────────────────────────────────────
     function playPaddleSound() {
@@ -679,20 +804,17 @@
       isChargeSoundPlaying = false;
 
       if (chargeOscillator && chargeGain) {
-        const now = audioCtx.currentTime;
-        const fadeDur = 0.15;
+        const osc  = chargeOscillator;
+        const gain = chargeGain;
+        chargeOscillator = null;
+        chargeGain = null;
 
-        chargeGain.gain.cancelScheduledValues(now);
-        chargeGain.gain.setValueAtTime(chargeGain.gain.value, now);
-        chargeGain.gain.exponentialRampToValueAtTime(0.001, now + fadeDur);
-
-        setTimeout(() => {
-          try {
-            chargeOscillator.stop();
-          } catch (e) {}
-          chargeOscillator = null;
-          chargeGain = null;
-        }, fadeDur * 1000);
+        const now     = audioCtx.currentTime;
+        const fadeEnd = now + 0.12;
+        gain.gain.cancelScheduledValues(now);
+        gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.001), now);
+        gain.gain.exponentialRampToValueAtTime(0.00001, fadeEnd);
+        try { osc.stop(fadeEnd); } catch (e) {}
       }
     }
 
@@ -760,6 +882,243 @@
       osc1.stop(now + dur); osc2.stop(now + dur); sub.stop(now + dur);
     }
 
+    // ─── Pre-game jingles ─────────────────────────────────────────────────────
+    // Plays a short looping musical phrase while the game screen is shown but
+    // the match hasn't started (state === 'ready'). Stops when space is pressed.
+
+    let activeJingle = null;
+
+    // Plays a one-shot jingle spec in a loop, routing through a shared output
+    // GainNode so stop() can fade the whole thing out cleanly.
+    function playJingle(spec) {
+      const output = audioCtx.createGain();
+      output.gain.value = 1;
+      output.connect(audioCtx.destination);
+      let stopped = false;
+      function scheduleNext(startT) {
+        if (stopped) return;
+        const dur = spec.play(audioCtx, startT, output);
+        const fireNext = Math.max(0, (startT + dur - audioCtx.currentTime - 0.3) * 1000);
+        setTimeout(() => scheduleNext(startT + dur), fireNext);
+      }
+      scheduleNext(audioCtx.currentTime + 0.05);
+      return {
+        stop() {
+          stopped = true;
+          output.gain.cancelScheduledValues(audioCtx.currentTime);
+          output.gain.setValueAtTime(output.gain.value, audioCtx.currentTime);
+          output.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4);
+        }
+      };
+    }
+
+    const JINGLES = [
+      {
+        name: 'Launch Sequence',
+        play(ctx, t, output) {
+          const master = ctx.createGain();
+          master.gain.setValueAtTime(0.25, t);
+          master.connect(output);
+          const notes = [261.6, 329.6, 392, 523.3, 659.3, 784, 1047];
+          notes.forEach((freq, i) => {
+            const osc = ctx.createOscillator(); const g = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, t + i * 0.12);
+            g.gain.setValueAtTime(0, t + i * 0.12);
+            g.gain.linearRampToValueAtTime(0.3, t + i * 0.12 + 0.04);
+            g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.12 + 0.35);
+            osc.connect(g); g.connect(master);
+            osc.start(t + i * 0.12); osc.stop(t + i * 0.12 + 0.4);
+          });
+          [1047, 1318.5, 1568].forEach(f => {
+            const osc = ctx.createOscillator(); const g = ctx.createGain();
+            osc.type = 'sine'; osc.frequency.value = f;
+            g.gain.setValueAtTime(0, t + 0.84);
+            g.gain.linearRampToValueAtTime(0.15, t + 1.0);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 2.4);
+            osc.connect(g); g.connect(master);
+            osc.start(t + 0.84); osc.stop(t + 2.5);
+          });
+          return 2.8;
+        }
+      },
+      {
+        name: 'Warp Gate',
+        play(ctx, t, output) {
+          const master = ctx.createGain();
+          master.gain.setValueAtTime(0.3, t);
+          master.connect(output);
+          const bass = ctx.createOscillator(); const bg = ctx.createGain();
+          bass.type = 'sine';
+          bass.frequency.setValueAtTime(55, t);
+          bass.frequency.exponentialRampToValueAtTime(30, t + 0.8);
+          bg.gain.setValueAtTime(0.5, t); bg.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+          bass.connect(bg); bg.connect(master); bass.start(t); bass.stop(t + 1.1);
+          const sweep = ctx.createOscillator(); const sg = ctx.createGain();
+          sweep.type = 'sawtooth';
+          sweep.frequency.setValueAtTime(100, t + 0.3);
+          sweep.frequency.exponentialRampToValueAtTime(2000, t + 1.8);
+          sg.gain.setValueAtTime(0, t + 0.3);
+          sg.gain.linearRampToValueAtTime(0.1, t + 0.6);
+          sg.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
+          sweep.connect(sg); sg.connect(master); sweep.start(t + 0.3); sweep.stop(t + 2.1);
+          [880, 1108.7, 1318.5, 1760].forEach((f, i) => {
+            const osc = ctx.createOscillator(); const g = ctx.createGain();
+            osc.type = 'sine'; osc.frequency.value = f;
+            g.gain.setValueAtTime(0, t + 1.6 + i * 0.1);
+            g.gain.linearRampToValueAtTime(0.12, t + 1.65 + i * 0.1);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 2.8);
+            osc.connect(g); g.connect(master);
+            osc.start(t + 1.6 + i * 0.1); osc.stop(t + 3.0);
+          });
+          return 3.4;
+        }
+      },
+      {
+        name: 'Neon Arcade',
+        play(ctx, t, output) {
+          const master = ctx.createGain();
+          master.gain.setValueAtTime(0.2, t);
+          master.connect(output);
+          const melody = [
+            [523.3,0.12],[659.3,0.12],[784,0.12],[1047,0.24],
+            [784,0.12],[1047,0.12],[1318.5,0.24],[1568,0.4],
+          ];
+          let off = 0;
+          melody.forEach(([freq, dur]) => {
+            const osc = ctx.createOscillator(); const g = ctx.createGain();
+            osc.type = 'square'; osc.frequency.value = freq;
+            g.gain.setValueAtTime(0.2, t + off);
+            g.gain.setValueAtTime(0.001, t + off + dur - 0.02);
+            osc.connect(g); g.connect(master);
+            osc.start(t + off); osc.stop(t + off + dur);
+            off += dur;
+          });
+          [0, 0.36, 0.72, 1.08].forEach(bt => {
+            const osc = ctx.createOscillator(); const g = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(120, t + bt);
+            osc.frequency.exponentialRampToValueAtTime(40, t + bt + 0.15);
+            g.gain.setValueAtTime(0.3, t + bt);
+            g.gain.exponentialRampToValueAtTime(0.001, t + bt + 0.15);
+            osc.connect(g); g.connect(master);
+            osc.start(t + bt); osc.stop(t + bt + 0.2);
+          });
+          return 2.4;
+        }
+      },
+      {
+        name: 'Dark Orbit',
+        play(ctx, t, output) {
+          const master = ctx.createGain();
+          master.gain.setValueAtTime(0.25, t);
+          master.connect(output);
+          [55, 82.4].forEach(f => {
+            const osc = ctx.createOscillator(); const g = ctx.createGain();
+            osc.type = 'sawtooth'; osc.frequency.value = f;
+            g.gain.setValueAtTime(0, t);
+            g.gain.linearRampToValueAtTime(0.15, t + 0.5);
+            g.gain.setValueAtTime(0.15, t + 1.8);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 2.5);
+            osc.connect(g); g.connect(master); osc.start(t); osc.stop(t + 2.6);
+          });
+          [[0.6,220],[1.0,277.2],[1.4,329.6]].forEach(([bt, f]) => {
+            const osc = ctx.createOscillator(); const g = ctx.createGain();
+            osc.type = 'square'; osc.frequency.value = f;
+            g.gain.setValueAtTime(0.2, t + bt);
+            g.gain.exponentialRampToValueAtTime(0.001, t + bt + 0.2);
+            osc.connect(g); g.connect(master); osc.start(t + bt); osc.stop(t + bt + 0.25);
+          });
+          [110, 164.8, 220, 329.6].forEach(f => {
+            const osc = ctx.createOscillator(); const g = ctx.createGain();
+            osc.type = 'sawtooth'; osc.frequency.value = f;
+            g.gain.setValueAtTime(0, t + 2.0);
+            g.gain.linearRampToValueAtTime(0.2, t + 2.1);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 3.2);
+            osc.connect(g); g.connect(master); osc.start(t + 2.0); osc.stop(t + 3.3);
+          });
+          return 3.6;
+        }
+      },
+      {
+        name: 'Stellar Ping',
+        play(ctx, t, output) {
+          const master = ctx.createGain();
+          master.gain.setValueAtTime(0.3, t);
+          master.connect(output);
+          const p1 = ctx.createOscillator(); const g1 = ctx.createGain();
+          p1.type = 'sine'; p1.frequency.value = 880;
+          g1.gain.setValueAtTime(0.3, t); g1.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+          p1.connect(g1); g1.connect(master); p1.start(t); p1.stop(t + 0.55);
+          const p2 = ctx.createOscillator(); const g2 = ctx.createGain();
+          p2.type = 'sine'; p2.frequency.value = 1318.5;
+          g2.gain.setValueAtTime(0.25, t + 0.25); g2.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+          p2.connect(g2); g2.connect(master); p2.start(t + 0.25); p2.stop(t + 0.95);
+          const bass = ctx.createOscillator(); const bg = ctx.createGain();
+          bass.type = 'sine'; bass.frequency.value = 220;
+          bg.gain.setValueAtTime(0, t + 0.5);
+          bg.gain.linearRampToValueAtTime(0.25, t + 0.6);
+          bg.gain.exponentialRampToValueAtTime(0.001, t + 1.6);
+          bass.connect(bg); bg.connect(master); bass.start(t + 0.5); bass.stop(t + 1.7);
+          return 2.0;
+        }
+      },
+      {
+        name: 'Photon Burst',
+        play(ctx, t, output) {
+          const master = ctx.createGain();
+          master.gain.setValueAtTime(0.2, t);
+          master.connect(output);
+          for (let i = 0; i < 12; i++) {
+            const osc = ctx.createOscillator(); const g = ctx.createGain();
+            osc.type = 'sawtooth';
+            const freq = 200 + i * 150;
+            osc.frequency.setValueAtTime(freq, t + i * 0.07);
+            osc.frequency.exponentialRampToValueAtTime(freq * 1.5, t + i * 0.07 + 0.06);
+            g.gain.setValueAtTime(0.15, t + i * 0.07);
+            g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.07 + 0.08);
+            osc.connect(g); g.connect(master);
+            osc.start(t + i * 0.07); osc.stop(t + i * 0.07 + 0.1);
+          }
+          const bufSize = ctx.sampleRate * 0.5;
+          const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+          const noise = ctx.createBufferSource(); noise.buffer = buf;
+          const ng = ctx.createGain();
+          ng.gain.setValueAtTime(0, t + 0.84);
+          ng.gain.linearRampToValueAtTime(0.3, t + 0.88);
+          ng.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(3000, t + 0.84);
+          filter.frequency.exponentialRampToValueAtTime(200, t + 1.8);
+          noise.connect(filter); filter.connect(ng); ng.connect(master);
+          noise.start(t + 0.84); noise.stop(t + 1.9);
+          [523.3, 659.3, 784].forEach(f => {
+            const osc = ctx.createOscillator(); const g = ctx.createGain();
+            osc.type = 'triangle'; osc.frequency.value = f;
+            g.gain.setValueAtTime(0, t + 1.6);
+            g.gain.linearRampToValueAtTime(0.12, t + 1.7);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 2.6);
+            osc.connect(g); g.connect(master); osc.start(t + 1.6); osc.stop(t + 2.7);
+          });
+          return 3.0;
+        }
+      },
+    ];
+
+    function playRandomJingle() {
+      stopJingle();
+      const spec = JINGLES[Math.floor(Math.random() * JINGLES.length)];
+      activeJingle = playJingle(spec);
+      document.getElementById('now-playing').textContent = spec.name;
+    }
+
+    function stopJingle() {
+      if (activeJingle) { activeJingle.stop(); activeJingle = null; }
+    }
+
     function playTypeBeep() {
       if (!audioCtx || audioCtx.state === 'suspended') return;
       const t = audioCtx.currentTime;
@@ -774,6 +1133,39 @@
       gain.connect(audioCtx.destination);
       osc.start(t);
       osc.stop(t + 0.05);
+    }
+
+    function playAlienTypeBeep() {
+      if (!audioCtx || audioCtx.state === 'suspended') return;
+      const t = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      // Deep sawtooth — descends over 200ms for an ominous carved-from-stone quality
+      osc.type = 'sawtooth';
+      const base = 90 + Math.random() * 55;
+      osc.frequency.setValueAtTime(base, t);
+      osc.frequency.exponentialRampToValueAtTime(base * 0.65, t + 0.2);
+      gain.gain.setValueAtTime(0.0, t);
+      gain.gain.linearRampToValueAtTime(0.11, t + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      // Simulated reverb: five early-reflection taps at increasing delays, decaying amplitude
+      [
+        { dt: 0.035, amp: 0.45 },
+        { dt: 0.08,  amp: 0.30 },
+        { dt: 0.14,  amp: 0.18 },
+        { dt: 0.22,  amp: 0.10 },
+        { dt: 0.34,  amp: 0.05 },
+      ].forEach(({ dt, amp }) => {
+        const d = audioCtx.createDelay(0.5);
+        d.delayTime.value = dt;
+        const g = audioCtx.createGain();
+        g.gain.value = amp;
+        gain.connect(d); d.connect(g); g.connect(audioCtx.destination);
+      });
+      osc.start(t);
+      osc.stop(t + 0.38);
     }
 
     function playThunderPaddleHit() {
@@ -1034,6 +1426,7 @@
     let trailPausedRemaining = 0; // ms remaining when game was paused
 
     const keys = {};
+    const codeKeys = {};
     let lastPlayerShot = 0;
     let nextAIShot = 0;
 
@@ -1111,7 +1504,7 @@
     }
 
     function showStarCanvas() {
-      starCanvas.style.display = '';
+      starCanvas.style.display = 'block';
       if (!starRaf) starRaf = requestAnimationFrame(renderStars);
     }
     function hideStarCanvas() {
@@ -1132,13 +1525,15 @@
       { text: "One game.", alien: true, pause: 400 },
       { text: "Winner takes all.", alien: true, pause: 900 },
       { text: "", pause: 500 },
-      { text: "Defeat — and Earth is erased from existence.", hl: false, pause: 700 },
-      { text: "Victory — and humanity earns its place among the stars.", hl: false, pause: 700 },
+      { text: "DEFEAT", hl: true, pause: 0 },
+      { text: " — and Earth is erased from existence.", sameLine: true, pause: 700 },
+      { text: "VICTORY", hl: true, pause: 0 },
+      { text: " — and humanity earns its place among the stars.", sameLine: true, pause: 700 },
       { text: "", pause: 400 },
       { text: "Billions of lives rest on a single paddle.", hl: false, pause: 700 },
-      { text: "You are Earth's last hope.", hl: true, pause: 800 },
       { text: "", pause: 300 },
-      { text: "Do not fail them.", hl: false, pause: 500 },
+      { text: "You are Earth's last hope.", hl: true, pause: 800 },
+      { text: "Do not fail them.", hl: true, pause: 500 },
     ];
 
     let storyIdx = 0, storyCharIdx = 0, storyTimer = null, storyDone = false;
@@ -1153,7 +1548,7 @@
       document.getElementById('narrative-lines').innerHTML = '';
       storyIdx = 0; storyCharIdx = 0; storyDone = false;
       document.getElementById('narrative-content').style.background = 'transparent';
-      storyTimer = setTimeout(typeStory, 5000); // wait for animation (3.5s) + 1.5s pause
+      storyTimer = setTimeout(typeStory, 2300); // start as last invader (i7) begins its fly-in
     }
 
     function typeStory() {
@@ -1164,11 +1559,17 @@
       const linesEl = document.getElementById('narrative-lines');
 
       if (storyCharIdx === 0) {
-        const p = document.createElement('p');
-        if (entry.alien) p.className = 'alien';
-        else if (entry.hl) p.className = 'hl';
-        p.id = 'sl' + storyIdx;
-        linesEl.appendChild(p);
+        if (entry.sameLine) {
+          const span = document.createElement('span');
+          span.id = 'sl' + storyIdx;
+          linesEl.lastElementChild.appendChild(span);
+        } else {
+          const p = document.createElement('p');
+          if (entry.alien) p.className = 'alien';
+          else if (entry.hl) p.className = 'hl';
+          p.id = 'sl' + storyIdx;
+          linesEl.appendChild(p);
+        }
       }
 
       if (entry.text === '') {
@@ -1179,7 +1580,7 @@
 
       const p = document.getElementById('sl' + storyIdx);
       p.textContent += entry.text[storyCharIdx];
-      playTypeBeep();
+      if (entry.alien) playAlienTypeBeep(); else playTypeBeep();
       storyCharIdx++;
 
       if (storyCharIdx >= entry.text.length) {
@@ -1200,12 +1601,18 @@
       document.getElementById('narrative-content').style.background = 'rgba(5,5,15,0.45)';
       const linesEl = document.getElementById('narrative-lines');
       linesEl.innerHTML = '';
-      STORY.forEach((entry, i) => {
-        const p = document.createElement('p');
-        if (entry.alien) p.className = 'alien';
-        else if (entry.hl) p.className = 'hl';
-        p.textContent = entry.text;
-        linesEl.appendChild(p);
+      STORY.forEach((entry) => {
+        if (entry.sameLine) {
+          const span = document.createElement('span');
+          span.textContent = entry.text;
+          linesEl.lastElementChild.appendChild(span);
+        } else {
+          const p = document.createElement('p');
+          if (entry.alien) p.className = 'alien';
+          else if (entry.hl) p.className = 'hl';
+          p.textContent = entry.text;
+          linesEl.appendChild(p);
+        }
       });
       finishStory();
     }
@@ -1215,25 +1622,63 @@
       narrativeScreen.classList.add('hidden');
       audioCtx.resume();
       resetGame();
-      state = 'playing';
-      startMusic();
+      state = 'ready';
+      playRandomJingle();
+    }
+
+    // Map a 0-100 warrior stat to a multiplier in [lo, hi]. Null/undefined
+    // returns 1 so paddles without a chosen warrior behave as before.
+    function statMul(stat, lo, hi) {
+      if (stat == null) return 1;
+      const s = Math.max(0, Math.min(100, stat)) / 100;
+      return lo + (hi - lo) * s;
+    }
+
+    // Apply a chosen warrior's stats and audio onto a paddle object. Called
+    // once per side after WarriorSelect resolves. Cosmetic fields here;
+    // gameplay-affecting stats are read from paddle.* at use sites.
+    function applyWarrior(paddle, w) {
+      paddle.warrior     = w;
+      paddle.color       = w.color;
+      paddle.bulletColor = w.color;
+      paddle.fireSfx     = w.fire;
+      paddle.power       = w.power;
+      paddle.speed       = w.speed;
+      paddle.rate        = w.rate;
+      paddle.deflect     = w.deflect;
+      paddle.burst       = w.burst;
+    }
+
+    // Narrative → warrior select → game. Clears the narrative screen first
+    // so the selection mounts cleanly over the starfield.
+    function startWarriorSelect() {
+      audioCtx.resume();
+      state = 'warrior-select';
+      narrativeScreen.classList.add('hidden');
+      WarriorSelect.show(({ earth, alien }) => {
+        applyWarrior(player, earth);
+        applyWarrior(ai, alien);
+        beginGame();
+      });
     }
 
     canvas.addEventListener('click', () => {
       if (state === 'idle') { startNarrative(); }
-      else if (state === 'narrative') { if (!storyDone) skipStory(); else beginGame(); }
-      else if (state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; startMusic(); }
+      else if (state === 'narrative') { if (!storyDone) skipStory(); else startWarriorSelect(); }
+      else if (state === 'win') { Cutscenes.defeat.hide(); Cutscenes.victory.hide(); hideStarCanvas(); audioCtx.resume(); resetGame(); launchBall(); state = 'playing'; startMusic(); }
     });
 
     document.addEventListener('keydown', e => {
       keys[e.key] = true;
+      codeKeys[e.code] = true;
       const arrows = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','W','s','S','a','A','d','D'];
       if ([...arrows, ' '].includes(e.key)) e.preventDefault();
 
       if (e.key === ' ') {
         if (state === 'idle') { startNarrative(); }
-        else if (state === 'narrative') { if (!storyDone) skipStory(); else beginGame(); }
-        else if (state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; startMusic(); }
+        else if (state === 'narrative') { if (!storyDone) skipStory(); else startWarriorSelect(); }
+        else if (state === 'ready') { stopJingle(); state = 'playing'; startMusic(); launchBall(); syncMusicToState(); return; }
+        else if (state === 'win') { Cutscenes.defeat.hide(); Cutscenes.victory.hide(); hideStarCanvas(); audioCtx.resume(); resetGame(); launchBall(); state = 'playing'; startMusic(); }
         else if (state === 'playing') {
           state = 'paused';
           stopShieldSound(); stopChargingSound(); shieldIsOn = false;
@@ -1253,13 +1698,25 @@
       // Mute toggle: 5 or Numpad5
       if (e.key === '5' || e.code === 'Numpad5') toggleMute();
 
+      // Dev shortcuts: V = victory cutscene, D = defeat cutscene
+      if (e.key === 'V' || e.key === 'D') {
+        clearTimeout(storyTimer);
+        startScreen.classList.add('hidden');
+        narrativeScreen.classList.add('hidden');
+        WarriorSelect.hide();
+        audioCtx.resume();
+        state = 'win'; stopChargingSound(); syncMusicToState();
+        if (e.key === 'V') Cutscenes.victory.show();
+        else               Cutscenes.defeat.show();
+      }
+
     });
 
     document.addEventListener('keyup', e => {
       keys[e.key] = false;
+      codeKeys[e.code] = false;
 
-      // Fire charged shot when releasing → or D
-      if ((e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') && isPlayerCharging) {
+      if ((e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' || e.code === 'Numpad6') && isPlayerCharging) {
         firePlayerBullet(playerChargeLevel);
         isPlayerCharging = false;
         playerChargeLevel = 0;
@@ -1283,7 +1740,6 @@
       useFrenzyMusic = false; buildTrackQueue(); currentTrackIdx = trackQueue[0];
       scheduleNextAIShot();
       scheduleNextTrail();
-      launchBall();
     }
 
     function scheduleNextTrail() {
@@ -1291,7 +1747,8 @@
     }
 
     function scheduleNextAIShot() {
-      nextAIShot = performance.now() + AI_SHOT_MIN + Math.random() * (AI_SHOT_MAX - AI_SHOT_MIN);
+      const ratemul = statMul(ai.rate, 1.6, 0.5);
+      nextAIShot = performance.now() + (AI_SHOT_MIN + Math.random() * (AI_SHOT_MAX - AI_SHOT_MIN)) * ratemul;
     }
 
     function launchBall(towardAI = Math.random() < 0.5) {
@@ -1318,6 +1775,8 @@
       winnerText = who === 'YOU' ? 'YOU WIN!' : 'CPU WINS!';
       winReason  = who === 'YOU' ? 'CPU paddle destroyed by bullets' : 'Your paddle was shot to pieces';
       syncMusicToState();
+      if (who === 'YOU') Cutscenes.victory.show();
+      else               Cutscenes.defeat.show();
     }
 
     // Returns true only when every Y slice of the paddle is inside a penetrating cavity's
@@ -1386,55 +1845,23 @@
       }
     }
 
-    function updatePlayer() {
-      const kUp   = keys['ArrowUp']   || keys['8'] === true && false || e_num8();
-      const kDown = keys['ArrowDown'] || e_num2();
-
-      if (kUp || kDown) {
-        if (kUp)   player.y -= KEY_PADDLE_SPEED;
-        if (kDown) player.y += KEY_PADDLE_SPEED;
-        // Sync mouseY so switching back to mouse is seamless
-        mouseY = player.y + PADDLE_H / 2;
-      } else {
-        player.y = mouseY - PADDLE_H / 2;
-      }
-      player.y = Math.max(0, Math.min(H - PADDLE_H, player.y));
-    }
-
-    // Numpad key checks via e.code stored in keys-by-code map
-    const codeKeys = {};
-    document.addEventListener('keydown', e => { codeKeys[e.code] = true; });
-    document.addEventListener('keyup',   e => {
-      codeKeys[e.code] = false;
-
-      // Fire charged shot when releasing Numpad6
-      if ((e.code === 'Numpad6' || e.code === 'KeyD') && isPlayerCharging) {
-        firePlayerBullet(playerChargeLevel);
-        isPlayerCharging = false;
-        playerChargeLevel = 0;
-      }
-    });
-
     const e_num8 = () => codeKeys['Numpad8'];
     const e_num2 = () => codeKeys['Numpad2'];
-    const e_num6 = () => codeKeys['Numpad6'];
-    const e_num4 = () => codeKeys['Numpad4'];
 
-    // Rewrite updatePlayer cleanly now that codeKeys is defined
-    // (overwrite previous definition)
     window._updatePlayer = function() {
       const kUp   = keys['ArrowUp']   || keys['w'] || keys['W'] || codeKeys['Numpad8'];
       const kDown = keys['ArrowDown'] || keys['s'] || keys['S'] || codeKeys['Numpad2'];
 
-      if (kUp)   player.y -= KEY_PADDLE_SPEED;
-      if (kDown) player.y += KEY_PADDLE_SPEED;
+      const speed = KEY_PADDLE_SPEED * statMul(player.speed, 0.7, 1.3);
+      if (kUp)   player.y -= speed;
+      if (kDown) player.y += speed;
       player.y = Math.max(0, Math.min(H - PADDLE_H, player.y));
     };
 
     function updateAI() {
       const center = ai.y + PADDLE_H / 2;
       const diff = ball.y - center;
-      const reaction = 0.08 + 0.04 * (Math.abs(ball.x - ai.x) / W);
+      const reaction = (0.08 + 0.04 * (Math.abs(ball.x - ai.x) / W)) * statMul(ai.speed, 0.7, 1.3);
       ai.y += diff * reaction;
       ai.y = Math.max(0, Math.min(H - PADDLE_H, ai.y));
     }
@@ -1459,7 +1886,8 @@
 
     function firePlayerBullet(chargeLevel) {
       const now = performance.now();
-      if (now - lastPlayerShot < SHOT_COOLDOWN) return;
+      const cooldown = SHOT_COOLDOWN * statMul(player.rate, 1.6, 0.5);
+      if (now - lastPlayerShot < cooldown) return;
       lastPlayerShot = now;
 
       // Determine power level based on charge (4 levels)
@@ -1469,25 +1897,44 @@
       else if (chargeLevel < 0.66) powerLevel = 2; // high
       else powerLevel = 3;                         // full
 
-      // Add bullet with power metadata
-      playerBullets.push({
-        x: player.x + PADDLE_W + 2,
-        y: player.y + PADDLE_H / 2,
-        power: powerLevel,
-        chargePercent: chargeLevel
-      });
+      const addBullet = () => {
+        playerBullets.push({
+          x: player.x + PADDLE_W + 2,
+          y: player.y + PADDLE_H / 2,
+          power: powerLevel,
+          chargePercent: chargeLevel
+        });
+      };
 
-      // Audio: stop charging sound and play release sound correlated to charge level
+      // Audio: stop charging sound and play release sound correlated to charge level.
+      // If the player has a chosen warrior, use its signature fire SFX instead.
       stopChargingSound();
-      playChargeFireSound(chargeLevel);
+      if (player.fireSfx) player.fireSfx(audioCtx);
+      else                playChargeFireSound(chargeLevel);
+
+      addBullet();
+      const burst = player.burst || 1;
+      for (let i = 1; i < burst; i++) {
+        setTimeout(() => {
+          if (player.fireSfx) player.fireSfx(audioCtx);
+          else                playChargeFireSound(chargeLevel);
+          addBullet();
+        }, i * 120);
+      }
     }
 
     function tryAIShoot() {
       const now = performance.now();
       if (now < nextAIShot) return;
       scheduleNextAIShot();
-      aiBullets.push({ x: ai.x - 2, y: ai.y + PADDLE_H / 2 });
-      playAIShootSound();
+      const fireOne = () => {
+        aiBullets.push({ x: ai.x - 2, y: ai.y + PADDLE_H / 2 });
+        if (ai.fireSfx) ai.fireSfx(audioCtx);
+        else            playAIShootSound();
+      };
+      fireOne();
+      const burst = ai.burst || 1;
+      for (let i = 1; i < burst; i++) setTimeout(fireOne, i * 120);
     }
 
     function updateShieldState() {
@@ -1578,7 +2025,7 @@
         // Ball deflection (circle-circle)
         const dist = Math.hypot(b.x - ball.x, b.y - ball.y);
         if (dist < BULLET_R + BALL_R) {
-          const impulse = 2.5 + (b.power || 0) * 1.5;
+          const impulse = (2.5 + (b.power || 0) * 1.5) * statMul(player.power, 0.8, 1.4);
           ball.vx += impulse;
           ball.vy += (ball.y - b.y) * 0.15;
           ball.speed = Math.min(Math.hypot(ball.vx, ball.vy), 14);
@@ -1607,7 +2054,7 @@
         // Ball deflection (circle-circle)
         const dist = Math.hypot(b.x - ball.x, b.y - ball.y);
         if (dist < BULLET_R + BALL_R) {
-          ball.vx -= 2.5;
+          ball.vx -= 2.5 * statMul(ai.power, 0.8, 1.4);
           ball.vy += (ball.y - b.y) * 0.15;
           ball.speed = Math.min(Math.hypot(ball.vx, ball.vy), 14);
           playBulletHitSound();
@@ -1650,7 +2097,7 @@
 
       // Reflect ball and set velocity
       const angle  = hitPos * Math.PI * 0.65;
-      ball.speed = Math.min(ball.speed + 0.3, 14);
+      ball.speed = Math.min(ball.speed + 0.3 * statMul(paddle.deflect, 0.8, 1.4), 14);
       const dir = paddle === player ? 1 : -1;
       // Use Math.abs to guarantee vx always points away from the paddle —
       // without this, angles > π/2 (extreme paddle edges) invert vx and trap the ball.
@@ -1749,6 +2196,8 @@
         winnerText = who === 'YOU' ? 'YOU WIN!' : 'CPU WINS!';
         winReason  = `First to ${WIN_SCORE} points`;
         syncMusicToState();
+        if (who === 'YOU') Cutscenes.victory.show();
+        else               Cutscenes.defeat.show();
       }
     }
 
@@ -1893,12 +2342,14 @@
 
     function drawBullets() {
       ctx.shadowBlur = 8;
+      const playerBulletColor = player.bulletColor || '#ff0';
+      const aiBulletColor     = ai.bulletColor     || '#f60';
+      ctx.fillStyle = playerBulletColor; ctx.shadowColor = playerBulletColor;
       playerBullets.forEach(b => {
         const r = BULLET_R + (b.power || 0) * 1.5;
-        ctx.fillStyle = '#ff0'; ctx.shadowColor = '#ff0';
         ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI*2); ctx.fill();
       });
-      ctx.fillStyle = '#f60'; ctx.shadowColor = '#f60';
+      ctx.fillStyle = aiBulletColor; ctx.shadowColor = aiBulletColor;
       aiBullets.forEach(b => { ctx.beginPath(); ctx.arc(b.x,b.y,BULLET_R,0,Math.PI*2); ctx.fill(); });
       ctx.shadowBlur = 0;
     }
@@ -2090,13 +2541,14 @@
       }
 
       drawDashedCenter();
-      drawPaddleWithHoles(player, '#4af', playerHoles);
-      drawPaddleWithHoles(ai, '#f74', aiHoles);
+      drawPaddleWithHoles(player, player.color || '#4af', playerHoles);
+      drawPaddleWithHoles(ai,     ai.color     || '#f74', aiHoles);
       drawShieldCrackle();
       updateFrenzyCounter();
-      if (state !== 'idle') { drawTrail(); drawBall(); drawParticles(); drawBullets(); }
+      if (state !== 'idle' && state !== 'ready') { drawTrail(); drawBall(); drawParticles(); drawBullets(); }
       sctx.clearRect(0, 0, SW, SH); // drawFrenzyEdgeText() suspended
-      if (state === 'paused') drawOverlay('PAUSED', 'Press SPACE to resume');
+      if (state === 'ready')   drawOverlay('READY?', 'Press SPACE to start', '');
+      else if (state === 'paused') drawOverlay('PAUSED', 'Press SPACE to resume');
       else if (state === 'win')    drawOverlay(winnerText, 'SPACE or Click to play again', winReason);
 
       ctx.restore();

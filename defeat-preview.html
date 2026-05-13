@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Defeat Animation Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="cutscenes.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #05050f; overflow: hidden; }
+    #star-canvas {
+      position: fixed; inset: 0; z-index: 100;
+      background: #05050f; pointer-events: none;
+      display: none;
+    }
+
+    @keyframes neonColorCycle {
+      0%   { color: #f88; text-shadow: 0 0 2px #fff, 0 0 8px #f44, 0 0 22px rgba(255,50,50,0.6); }
+      16%  { color: #fc8; text-shadow: 0 0 2px #fff, 0 0 8px #f80, 0 0 22px rgba(255,140,0,0.6); }
+      33%  { color: #ff8; text-shadow: 0 0 2px #fff, 0 0 8px #ff0, 0 0 22px rgba(255,255,0,0.6); }
+      50%  { color: #8f8; text-shadow: 0 0 2px #fff, 0 0 8px #0f4, 0 0 22px rgba(0,255,80,0.6); }
+      66%  { color: #8ef; text-shadow: 0 0 2px #fff, 0 0 8px #08f, 0 0 22px rgba(0,150,255,0.6); }
+      83%  { color: #c8f; text-shadow: 0 0 2px #fff, 0 0 8px #80f, 0 0 22px rgba(150,0,255,0.6); }
+      100% { color: #f88; text-shadow: 0 0 2px #fff, 0 0 8px #f44, 0 0 22px rgba(255,50,50,0.6); }
+    }
+
+    #replay {
+      position: fixed; bottom: 20px; right: 24px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px; letter-spacing: 2px;
+      color: rgba(255,255,255,0.35);
+      cursor: pointer;
+      z-index: 200;
+    }
+    #replay:hover { color: rgba(255,255,255,0.7); }
+  </style>
+</head>
+<body>
+
+  <canvas id="star-canvas"></canvas>
+
+  <!-- Hidden template — Cutscenes.defeat.show() clones this and inserts the clone next to it. -->
+  <div id="defeat-screen" class="hidden">
+
+    <!-- Section 1: headline -->
+    <div id="defeat-headline">
+      <div class="d-typeline" id="d-line1">THE EARTH</div>
+      <div class="d-typeline" id="d-line2">IS</div>
+      <div class="d-typeline" id="d-line3">NO MORE</div>
+    </div>
+
+    <!-- Section 2: animation -->
+    <div id="defeat-anim">
+      <div id="dw-earth"><span class="nem earth-em">🌍</span></div>
+      <div id="dw-i1"><span class="nem other-em di1-hv">👾</span></div>
+      <div id="dw-i2"><span class="nem other-em di2-hv">👾</span></div>
+      <div id="dw-i3"><span class="nem other-em di3-hv">👾</span></div>
+      <div id="dw-i4"><span class="nem other-em di4-hv">👾</span></div>
+      <div id="dw-i5"><span class="nem other-em di5-hv">👾</span></div>
+      <div id="dw-i6"><span class="nem other-em di6-hv">👾</span></div>
+      <div id="dw-i7"><span class="nem other-em di7-hv">👾</span></div>
+      <div id="dw-skull">☠️</div>
+      <div id="dw-collision">💥</div>
+    </div>
+
+    <!-- Section 3: bottom text (typed in via JS) -->
+    <div id="defeat-content">
+      <div id="defeat-subtitle"></div>
+      <div id="defeat-line3"></div>
+      <div id="defeat-prompt">— PRESS SPACE TO TRY AGAIN —</div>
+    </div>
+
+  </div>
+
+  <span id="replay" onclick="location.reload()">↺ replay</span>
+
+  <script src="cutscenes.js"></script>
+  <script>
+    const starCanvas = document.getElementById('star-canvas');
+    const starCtx = starCanvas.getContext('2d');
+    const STARS = Array.from({length: 220}, () => ({
+      x: Math.random(), y: Math.random(),
+      r: Math.random() < 0.85 ? 0.4 + Math.random() * 0.8 : 1.0 + Math.random() * 1.0,
+      base: 0.15 + Math.random() * 0.55,
+      speed: 0.3 + Math.random() * 1.4,
+      phase: Math.random() * Math.PI * 2
+    }));
+
+    function resizeStarCanvas() {
+      starCanvas.width = window.innerWidth;
+      starCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeStarCanvas);
+    resizeStarCanvas();
+
+    let starRaf = null;
+    function renderStars(ts) {
+      const w = starCanvas.width, h = starCanvas.height;
+      starCtx.clearRect(0, 0, w, h);
+      for (const s of STARS) {
+        const alpha = s.base * (0.75 + 0.25 * Math.sin(ts * 0.001 * s.speed + s.phase));
+        starCtx.globalAlpha = alpha;
+        starCtx.fillStyle = '#fff';
+        starCtx.beginPath();
+        starCtx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2);
+        starCtx.fill();
+      }
+      starCtx.globalAlpha = 1;
+      starRaf = requestAnimationFrame(renderStars);
+    }
+
+    function showStarCanvas() {
+      starCanvas.style.display = 'block';
+      if (!starRaf) starRaf = requestAnimationFrame(renderStars);
+    }
+    function hideStarCanvas() {
+      starCanvas.style.display = 'none';
+      if (starRaf) { cancelAnimationFrame(starRaf); starRaf = null; }
+    }
+
+    showStarCanvas();
+
+    // Standalone preview harness: hand an audio context to the cutscene module
+    // and trigger the defeat sequence. Audio stays silent until first user gesture.
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    Cutscenes.init(audioCtx);
+    const resumeAudio = () => { if (audioCtx.state === 'suspended') audioCtx.resume(); };
+    document.addEventListener('click',   resumeAudio, { once: true });
+    document.addEventListener('keydown', resumeAudio, { once: true });
+
+    Cutscenes.defeat.show();
+  </script>
+
+</body>
+</html>

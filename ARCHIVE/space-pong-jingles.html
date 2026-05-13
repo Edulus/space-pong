@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Pong – Startup Jingles</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: #06080d;
+    color: #e0e6f0;
+    font-family: 'Rajdhani', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* starfield canvas */
+  #stars {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 720px;
+    padding: 40px 24px 60px;
+  }
+
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 28px;
+    text-align: center;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #00e5ff, #7c4dff, #ff4081);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: #6a7a9b;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  .jingle-card {
+    background: linear-gradient(145deg, rgba(15,20,35,0.9), rgba(10,14,26,0.95));
+    border: 1px solid rgba(100, 140, 255, 0.12);
+    border-radius: 16px;
+    padding: 28px 28px 24px;
+    margin-bottom: 20px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .jingle-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .jingle-card:hover {
+    border-color: rgba(100, 140, 255, 0.3);
+    box-shadow: 0 4px 30px rgba(80, 120, 255, 0.08);
+  }
+
+  .jingle-card:hover::before { opacity: 1; }
+
+  .jingle-number {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    color: #4a5a7a;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+
+  .jingle-name {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .jingle-desc {
+    font-size: 14px;
+    color: #7a8aaa;
+    line-height: 1.5;
+    margin-bottom: 18px;
+  }
+
+  .jingle-meta {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 18px;
+    font-size: 12px;
+    color: #4a5a7a;
+    letter-spacing: 1px;
+  }
+
+  .jingle-meta span {
+    background: rgba(100, 140, 255, 0.06);
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(100, 140, 255, 0.1);
+  }
+
+  .play-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 12px 32px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-transform: uppercase;
+  }
+
+  .play-btn:hover {
+    background: var(--accent);
+    color: #06080d;
+    box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+
+  .play-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .play-btn.playing {
+    background: var(--accent);
+    color: #06080d;
+    animation: pulse-glow 1s ease-in-out infinite alternate;
+  }
+
+  @keyframes pulse-glow {
+    from { box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 30%, transparent); }
+    to   { box-shadow: 0 0 25px color-mix(in srgb, var(--accent) 50%, transparent); }
+  }
+
+  /* Visualizer bar */
+  .viz-bar {
+    height: 3px;
+    background: rgba(100,140,255,0.08);
+    border-radius: 2px;
+    margin-top: 16px;
+    overflow: hidden;
+  }
+
+  .viz-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.1s linear;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="content">
+  <h1>Super Pong</h1>
+  <p class="subtitle">Startup Jingle Auditions</p>
+
+  <div id="jingles"></div>
+</div>
+
+<script>
+// ── Starfield ──
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+let stars = [];
+
+function initStars() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  stars = Array.from({length: 180}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.4 + 0.3,
+    speed: Math.random() * 0.3 + 0.05,
+    flicker: Math.random() * Math.PI * 2
+  }));
+}
+
+function drawStars() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const t = performance.now() * 0.001;
+  for (const s of stars) {
+    const alpha = 0.4 + 0.4 * Math.sin(t * 0.8 + s.flicker);
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200,210,240,${alpha})`;
+    ctx.fill();
+    s.y += s.speed;
+    if (s.y > canvas.height + 2) { s.y = -2; s.x = Math.random() * canvas.width; }
+  }
+  requestAnimationFrame(drawStars);
+}
+
+initStars();
+drawStars();
+window.addEventListener('resize', initStars);
+
+// ── Audio Context ──
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+// ── Jingle Definitions ──
+const jingles = [
+  {
+    name: "Launch Sequence",
+    accent: "#00e5ff",
+    desc: "A rising arpeggio that sweeps upward like a rocket ignition — bright, fast, triumphant.",
+    duration: "2.4s",
+    mood: "Epic / Uplifting",
+    play(ctx, t) {
+      const notes = [261.6, 329.6, 392, 523.3, 659.3, 784, 1047];
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.25, t);
+      master.connect(ctx.destination);
+
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, t + i * 0.12);
+        g.gain.setValueAtTime(0, t + i * 0.12);
+        g.gain.linearRampToValueAtTime(0.3, t + i * 0.12 + 0.04);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.12 + 0.35);
+        osc.connect(g).connect(master);
+        osc.start(t + i * 0.12);
+        osc.stop(t + i * 0.12 + 0.4);
+      });
+
+      // Final chord shimmer
+      [1047, 1318.5, 1568].forEach(f => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = f;
+        g.gain.setValueAtTime(0, t + 0.84);
+        g.gain.linearRampToValueAtTime(0.15, t + 1.0);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 2.4);
+        osc.connect(g).connect(master);
+        osc.start(t + 0.84);
+        osc.stop(t + 2.5);
+      });
+
+      return 2.4;
+    }
+  },
+  {
+    name: "Warp Gate",
+    accent: "#7c4dff",
+    desc: "A deep bass pulse followed by a shimmering sweep — like passing through a wormhole into the arena.",
+    duration: "3.0s",
+    mood: "Mysterious / Sci-fi",
+    play(ctx, t) {
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.3, t);
+      master.connect(ctx.destination);
+
+      // Deep bass hit
+      const bass = ctx.createOscillator();
+      const bg = ctx.createGain();
+      bass.type = 'sine';
+      bass.frequency.setValueAtTime(55, t);
+      bass.frequency.exponentialRampToValueAtTime(30, t + 0.8);
+      bg.gain.setValueAtTime(0.5, t);
+      bg.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+      bass.connect(bg).connect(master);
+      bass.start(t);
+      bass.stop(t + 1.1);
+
+      // Sweep up
+      const sweep = ctx.createOscillator();
+      const sg = ctx.createGain();
+      sweep.type = 'sawtooth';
+      sweep.frequency.setValueAtTime(100, t + 0.3);
+      sweep.frequency.exponentialRampToValueAtTime(2000, t + 1.8);
+      sg.gain.setValueAtTime(0, t + 0.3);
+      sg.gain.linearRampToValueAtTime(0.1, t + 0.6);
+      sg.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
+      sweep.connect(sg).connect(master);
+      sweep.start(t + 0.3);
+      sweep.stop(t + 2.1);
+
+      // Chime arrival
+      [880, 1108.7, 1318.5, 1760].forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = f;
+        g.gain.setValueAtTime(0, t + 1.6 + i * 0.1);
+        g.gain.linearRampToValueAtTime(0.12, t + 1.65 + i * 0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 2.8);
+        osc.connect(g).connect(master);
+        osc.start(t + 1.6 + i * 0.1);
+        osc.stop(t + 3.0);
+      });
+
+      return 3.0;
+    }
+  },
+  {
+    name: "Neon Arcade",
+    accent: "#ff4081",
+    desc: "Punchy 8-bit bleeps with a catchy two-bar motif — pure retro arcade energy.",
+    duration: "2.0s",
+    mood: "Retro / Energetic",
+    play(ctx, t) {
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.2, t);
+      master.connect(ctx.destination);
+
+      // Melody: classic arcade motif
+      const melody = [
+        [523.3, 0.12], [659.3, 0.12], [784, 0.12], [1047, 0.24],
+        [784, 0.12], [1047, 0.12], [1318.5, 0.24],
+        [1568, 0.4]
+      ];
+
+      let offset = 0;
+      melody.forEach(([freq, dur]) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(0.2, t + offset);
+        g.gain.setValueAtTime(0.001, t + offset + dur - 0.02);
+        osc.connect(g).connect(master);
+        osc.start(t + offset);
+        osc.stop(t + offset + dur);
+        offset += dur;
+      });
+
+      // Bass kicks
+      [0, 0.36, 0.72, 1.08].forEach(bt => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(120, t + bt);
+        osc.frequency.exponentialRampToValueAtTime(40, t + bt + 0.15);
+        g.gain.setValueAtTime(0.3, t + bt);
+        g.gain.exponentialRampToValueAtTime(0.001, t + bt + 0.15);
+        osc.connect(g).connect(master);
+        osc.start(t + bt);
+        osc.stop(t + bt + 0.2);
+      });
+
+      return 2.0;
+    }
+  },
+  {
+    name: "Dark Orbit",
+    accent: "#ffd740",
+    desc: "Menacing low drones, metallic stabs, and a final power chord — something wicked is about to begin.",
+    duration: "3.2s",
+    mood: "Ominous / Intense",
+    play(ctx, t) {
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.25, t);
+      master.connect(ctx.destination);
+
+      // Ominous drone
+      [55, 82.4].forEach(f => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.value = f;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.15, t + 0.5);
+        g.gain.setValueAtTime(0.15, t + 1.8);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 2.5);
+        osc.connect(g).connect(master);
+        osc.start(t);
+        osc.stop(t + 2.6);
+      });
+
+      // Metallic stabs
+      [0.6, 1.0, 1.4].forEach((bt, i) => {
+        const f = [220, 277.2, 329.6][i];
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = f;
+        g.gain.setValueAtTime(0.2, t + bt);
+        g.gain.exponentialRampToValueAtTime(0.001, t + bt + 0.2);
+        osc.connect(g).connect(master);
+        osc.start(t + bt);
+        osc.stop(t + bt + 0.25);
+      });
+
+      // Power chord finale
+      [110, 164.8, 220, 329.6].forEach(f => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.value = f;
+        g.gain.setValueAtTime(0, t + 2.0);
+        g.gain.linearRampToValueAtTime(0.2, t + 2.1);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 3.2);
+        osc.connect(g).connect(master);
+        osc.start(t + 2.0);
+        osc.stop(t + 3.3);
+      });
+
+      return 3.2;
+    }
+  },
+  {
+    name: "Stellar Ping",
+    accent: "#69f0ae",
+    desc: "Clean, minimal — two crystalline tones and a soft bass resolve. Elegant and quick.",
+    duration: "1.6s",
+    mood: "Clean / Minimal",
+    play(ctx, t) {
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.3, t);
+      master.connect(ctx.destination);
+
+      // Ping 1
+      const p1 = ctx.createOscillator();
+      const g1 = ctx.createGain();
+      p1.type = 'sine';
+      p1.frequency.value = 880;
+      g1.gain.setValueAtTime(0.3, t);
+      g1.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      p1.connect(g1).connect(master);
+      p1.start(t);
+      p1.stop(t + 0.55);
+
+      // Ping 2 (higher, delayed)
+      const p2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      p2.type = 'sine';
+      p2.frequency.value = 1318.5;
+      g2.gain.setValueAtTime(0.25, t + 0.25);
+      g2.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+      p2.connect(g2).connect(master);
+      p2.start(t + 0.25);
+      p2.stop(t + 0.95);
+
+      // Soft bass resolve
+      const bass = ctx.createOscillator();
+      const bg = ctx.createGain();
+      bass.type = 'sine';
+      bass.frequency.value = 220;
+      bg.gain.setValueAtTime(0, t + 0.5);
+      bg.gain.linearRampToValueAtTime(0.25, t + 0.6);
+      bg.gain.exponentialRampToValueAtTime(0.001, t + 1.6);
+      bass.connect(bg).connect(master);
+      bass.start(t + 0.5);
+      bass.stop(t + 1.7);
+
+      return 1.6;
+    }
+  },
+  {
+    name: "Photon Burst",
+    accent: "#ff6e40",
+    desc: "Rapid-fire laser notes spiral upward into a detonation reverb — explosive and flashy.",
+    duration: "2.6s",
+    mood: "Explosive / Action",
+    play(ctx, t) {
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.2, t);
+      master.connect(ctx.destination);
+
+      // Rapid rising laser pips
+      for (let i = 0; i < 12; i++) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sawtooth';
+        const freq = 200 + i * 150;
+        osc.frequency.setValueAtTime(freq, t + i * 0.07);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.5, t + i * 0.07 + 0.06);
+        g.gain.setValueAtTime(0.15, t + i * 0.07);
+        g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.07 + 0.08);
+        osc.connect(g).connect(master);
+        osc.start(t + i * 0.07);
+        osc.stop(t + i * 0.07 + 0.1);
+      }
+
+      // Detonation: noise burst
+      const bufSize = ctx.sampleRate * 0.5;
+      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1);
+      const noise = ctx.createBufferSource();
+      noise.buffer = buf;
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(0, t + 0.84);
+      ng.gain.linearRampToValueAtTime(0.3, t + 0.88);
+      ng.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(3000, t + 0.84);
+      filter.frequency.exponentialRampToValueAtTime(200, t + 1.8);
+      noise.connect(filter).connect(ng).connect(master);
+      noise.start(t + 0.84);
+      noise.stop(t + 1.9);
+
+      // Resolution tone
+      [523.3, 659.3, 784].forEach(f => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = f;
+        g.gain.setValueAtTime(0, t + 1.6);
+        g.gain.linearRampToValueAtTime(0.12, t + 1.7);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 2.6);
+        osc.connect(g).connect(master);
+        osc.start(t + 1.6);
+        osc.stop(t + 2.7);
+      });
+
+      return 2.6;
+    }
+  }
+];
+
+// ── Render Cards ──
+const container = document.getElementById('jingles');
+let currentlyPlaying = null;
+
+jingles.forEach((j, idx) => {
+  const card = document.createElement('div');
+  card.className = 'jingle-card';
+  card.style.setProperty('--accent', j.accent);
+  card.innerHTML = `
+    <div class="jingle-number">JINGLE ${String(idx + 1).padStart(2, '0')}</div>
+    <div class="jingle-name">${j.name}</div>
+    <div class="jingle-desc">${j.desc}</div>
+    <div class="jingle-meta">
+      <span>${j.duration}</span>
+      <span>${j.mood}</span>
+    </div>
+    <button class="play-btn" data-idx="${idx}">▶ Play</button>
+    <div class="viz-bar"><div class="viz-fill"></div></div>
+  `;
+  container.appendChild(card);
+});
+
+// ── Play Logic ──
+document.querySelectorAll('.play-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const idx = parseInt(btn.dataset.idx);
+    const j = jingles[idx];
+    const ctx = getCtx();
+
+    // Disable all buttons during playback
+    document.querySelectorAll('.play-btn').forEach(b => b.disabled = true);
+    btn.classList.add('playing');
+    btn.textContent = '◼ Playing';
+
+    const vizFill = btn.parentElement.querySelector('.viz-fill');
+    const startTime = ctx.currentTime;
+    const dur = j.play(ctx, startTime);
+
+    // Animate progress bar
+    function updateViz() {
+      const elapsed = ctx.currentTime - startTime;
+      const pct = Math.min(elapsed / dur * 100, 100);
+      vizFill.style.width = pct + '%';
+      if (elapsed < dur) {
+        requestAnimationFrame(updateViz);
+      } else {
+        vizFill.style.width = '0%';
+        btn.classList.remove('playing');
+        btn.textContent = '▶ Play';
+        document.querySelectorAll('.play-btn').forEach(b => b.disabled = false);
+      }
+    }
+    requestAnimationFrame(updateViz);
+  });
+});
+</script>
+</body>
+</html>

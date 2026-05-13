@@ -1,0 +1,320 @@
+[1mdiff --git a/index.html b/index.html[m
+[1mindex d768d98..80ab9a2 100644[m
+[1m--- a/index.html[m
+[1m+++ b/index.html[m
+[36m@@ -6,6 +6,7 @@[m
+   <link rel="preconnect" href="https://fonts.googleapis.com">[m
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>[m
+   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">[m
+[32m+[m[32m  <link rel="stylesheet" href="cutscenes.css">[m
+   <style>[m
+     * { margin: 0; padding: 0; box-sizing: border-box; }[m
+     body {[m
+[36m@@ -146,6 +147,12 @@[m
+       margin-top: 30px; font-size: 15px; color: #bbb; letter-spacing: 1px;[m
+       background: rgba(0,0,0,0.5); padding: 4px 12px; border-radius: 4px;[m
+     }[m
+[32m+[m[32m    #star-canvas {[m
+[32m+[m[32m      position: fixed; inset: 0; z-index: 99;[m
+[32m+[m[32m      background: #05050f; pointer-events: none;[m
+[32m+[m[32m      display: none; opacity: 0;[m
+[32m+[m[32m      transition: opacity 1000ms ease-in;[m
+[32m+[m[32m    }[m
+     #start-screen {[m
+       position: fixed;[m
+       inset: 0;[m
+[36m@@ -154,7 +161,7 @@[m
+       align-items: center;[m
+       justify-content: center;[m
+       z-index: 100;[m
+[31m-      background: #05050f;[m
+[32m+[m[32m      background: transparent;[m
+       pointer-events: all;[m
+     }[m
+     #start-screen.hidden { display: none; }[m
+[36m@@ -276,7 +283,7 @@[m
+       position: fixed; inset: 0;[m
+       display: flex; flex-direction: column;[m
+       align-items: center; justify-content: center;[m
+[31m-      z-index: 100; background: #05050f;[m
+[32m+[m[32m      z-index: 100; background: transparent;[m
+     }[m
+     #narrative-screen.hidden { display: none; }[m
+     /* Animation sits at a fixed absolute position just above center, behind the text */[m
+[36m@@ -367,6 +374,7 @@[m
+   <div id="bg-a" class="bg-layer"></div>[m
+   <div id="bg-b" class="bg-layer"></div>[m
+   <div id="frenzy-overlay"></div>[m
+[32m+[m[32m  <canvas id="star-canvas"></canvas>[m
+   <div id="narrative-screen" class="hidden">[m
+     <div id="narrative-anim">[m
+       <div id="nw-earth"><span class="nem earth-em">🌍</span></div>[m
+[36m@@ -383,6 +391,55 @@[m
+       <div id="narrative-prompt">— PRESS SPACE TO BEGIN —</div>[m
+     </div>[m
+   </div>[m
+[32m+[m
+[32m+[m[32m  <div id="defeat-screen" class="hidden">[m
+[32m+[m[32m    <div id="defeat-headline">[m
+[32m+[m[32m      <div class="d-typeline" id="d-line1">THE EARTH</div>[m
+[32m+[m[32m      <div class="d-typeline" id="d-line2">IS</div>[m
+[32m+[m[32m      <div class="d-typeline" id="d-line3">NO MORE</div>[m
+[32m+[m[32m    </div>[m
+[32m+[m[32m    <div id="defeat-anim">[m
+[32m+[m[32m      <div id="dw-earth"><span class="nem earth-em">🌍</span></div>[m
+[32m+[m[32m      <div id="dw-i1"><span class="nem other-em di1-hv">👾</span></div>[m
+[32m+[m[32m      <div id="dw-i2"><span class="nem other-em di2-hv">👾</span></div>[m
+[32m+[m[32m      <div id="dw-i3"><span class="nem other-em di3-hv">👾</span></div>[m
+[32m+[m[32m      <div id="dw-i4"><span class="nem other-em di4-hv">👾</span></div>[m
+[32m+[m[32m      <div id="dw-i5"><span class="nem other-em di5-hv">👾</span></div>[m
+[32m+[m[32m      <div id="dw-i6"><span class="nem other-em di6-hv">👾</span></div>[m
+[32m+[m[32m      <div id="dw-i7"><span class="nem other-em di7-hv">👾</span></div>[m
+[32m+[m[32m      <div id="dw-skull">☠️</div>[m
+[32m+[m[32m      <div id="dw-collision">💥</div>[m
+[32m+[m[32m    </div>[m
+[32m+[m[32m    <div id="defeat-content">[m
+[32m+[m[32m      <div id="defeat-subtitle"></div>[m
+[32m+[m[32m      <div id="defeat-line3"></div>[m
+[32m+[m[32m      <div id="defeat-prompt">— PRESS SPACE TO TRY AGAIN —</div>[m
+[32m+[m[32m    </div>[m
+[32m+[m[32m  </div>[m
+[32m+[m
+[32m+[m[32m  <div id="victory-screen" class="hidden">[m
+[32m+[m[32m    <div id="victory-headline">[m
+[32m+[m[32m      <div class="d-typeline" id="v-line1">WELCOME</div>[m
+[32m+[m[32m      <div class="d-typeline" id="v-line2">TO THE</div>[m
+[32m+[m[32m      <div class="d-typeline" id="v-line3">STARS</div>[m
+[32m+[m[32m    </div>[m
+[32m+[m[32m    <div id="victory-anim">[m
+[32m+[m[32m      <div id="vw-earth"><span class="nem earth-em">🌍</span></div>[m
+[32m+[m[32m      <div id="vw-p1"><span class="nem other-em vp1-hv">🪐</span></div>[m
+[32m+[m[32m      <div id="vw-p2"><span class="nem other-em vp2-hv">⭐</span></div>[m
+[32m+[m[32m      <div id="vw-p3"><span class="nem other-em vp3-hv">🌟</span></div>[m
+[32m+[m[32m      <div id="vw-p4"><span class="nem other-em vp4-hv">☀️</span></div>[m
+[32m+[m[32m      <div id="vw-p5"><span class="nem other-em vp5-hv">🌕</span></div>[m
+[32m+[m[32m      <div id="vw-p6"><span class="nem other-em vp6-hv">✨</span></div>[m
+[32m+[m[32m      <div id="vw-p7"><span class="nem other-em vp7-hv">💫</span></div>[m
+[32m+[m[32m    </div>[m
+[32m+[m[32m    <div id="victory-content">[m
+[32m+[m[32m      <div id="victory-subtitle"></div>[m
+[32m+[m[32m      <div id="victory-line3"></div>[m
+[32m+[m[32m      <div id="victory-prompt">— PRESS SPACE TO PLAY AGAIN —</div>[m
+[32m+[m[32m    </div>[m
+[32m+[m[32m  </div>[m
+[32m+[m
+   <div id="start-screen">[m
+     <h1 id="splash-title">SPACE PONG</h1>[m
+     <div class="splash-subtitle">bullets · spin · frenzy · shields</div>[m
+[36m@@ -442,6 +499,7 @@[m
+   </div>[m
+   <div id="keys-help">SLOWER: - &nbsp;|&nbsp; FASTER: +</div>[m
+ [m
+[32m+[m[32m  <script src="cutscenes.js"></script>[m
+   <script>[m
+     // ─── Background images (NASA APOD) ───────────────────────────────────────[m
+     const APOD_API_KEY = 'Fek6QhTkzvPLLA22pXlm1mJh5IRQTMq0ZwOsfzZN';[m
+[36m@@ -558,7 +616,7 @@[m
+     const PADDLE_W = 12, PADDLE_H = 90, BALL_R = 8;[m
+     const PADDLE_CURVE = 0.35; // spin multiplier based on hit position[m
+     const KEY_PADDLE_SPEED = 11;[m
+[31m-    const WIN_SCORE = 99;[m
+[32m+[m[32m    const WIN_SCORE = 5;[m
+     const BULLET_R = 2, BULLET_SPEED = 9;[m
+     const HOLE_SIZE = 14, MAX_HOLES = 20;[m
+     const SHOT_COOLDOWN = 700;[m
+[36m@@ -570,6 +628,50 @@[m
+ [m
+     // ─── Audio context ────────────────────────────────────────────────────────[m
+     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();[m
+[32m+[m[32m    Cutscenes.init(audioCtx);[m
+[32m+[m
+[32m+[m[32m    // ─── Starfield ────────────────────────────────────────────────────────────[m
+[32m+[m[32m    const starCanvas = document.getElementById('star-canvas');[m
+[32m+[m[32m    const starCtx2d = starCanvas.getContext('2d');[m
+[32m+[m[32m    const STARS = Array.from({ length: 150 }, () => ({[m
+[32m+[m[32m      x: Math.random(), y: Math.random(),[m
+[32m+[m[32m      r: 0.5 + Math.random() * 1.5,[m
+[32m+[m[32m      a: 0.4 + Math.random() * 0.6[m
+[32m+[m[32m    }));[m
+[32m+[m
+[32m+[m[32m    function drawStars() {[m
+[32m+[m[32m      starCanvas.width  = window.innerWidth;[m
+[32m+[m[32m      starCanvas.height = window.innerHeight;[m
+[32m+[m[32m      for (const s of STARS) {[m
+[32m+[m[32m        starCtx2d.globalAlpha = s.a;[m
+[32m+[m[32m        starCtx2d.fillStyle = '#fff';[m
+[32m+[m[32m        starCtx2d.beginPath();[m
+[32m+[m[32m        starCtx2d.arc(s.x * starCanvas.width, s.y * starCanvas.height, s.r, 0, Math.PI * 2);[m
+[32m+[m[32m        starCtx2d.fill();[m
+[32m+[m[32m      }[m
+[32m+[m[32m      starCtx2d.globalAlpha = 1;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    function showStarCanvas(fade = false) {[m
+[32m+[m[32m      drawStars();[m
+[32m+[m[32m      if (fade) {[m
+[32m+[m[32m        starCanvas.style.display = '';[m
+[32m+[m[32m        requestAnimationFrame(() => requestAnimationFrame(() => { starCanvas.style.opacity = '1'; }));[m
+[32m+[m[32m      } else {[m
+[32m+[m[32m        starCanvas.style.transition = 'none';[m
+[32m+[m[32m        starCanvas.style.display = '';[m
+[32m+[m[32m        starCanvas.style.opacity = '1';[m
+[32m+[m[32m        requestAnimationFrame(() => { starCanvas.style.transition = ''; });[m
+[32m+[m[32m      }[m
+[32m+[m[32m    }[m
+[32m+[m[32m    function hideStarCanvas() {[m
+[32m+[m[32m      starCanvas.style.opacity = '0';[m
+[32m+[m[32m      starCanvas.style.display = 'none';[m
+[32m+[m[32m    }[m
+[32m+[m[32m    window.showStarCanvas = (fade) => showStarCanvas(fade);[m
+[32m+[m
+[32m+[m[32m    window.addEventListener('resize', () => { if (starCanvas.style.display !== 'none') drawStars(); });[m
+[32m+[m[32m    showStarCanvas();[m
+ [m
+     // ─── SFX ─────────────────────────────────────────────────────────────────[m
+     function playPaddleSound() {[m
+[36m@@ -1070,95 +1172,16 @@[m
+     const startScreen    = document.getElementById('start-screen');[m
+     const narrativeScreen = document.getElementById('narrative-screen');[m
+ [m
+[31m-    const STORY = [[m
+[31m-      { text: "THE YEAR IS 2157.", hl: false, pause: 900 },[m
+[31m-      { text: "A vast alien armada has locked orbit around Earth.", hl: false, pause: 700 },[m
+[31m-      { text: "Their fleet darkens the sky above every city on the planet.", hl: false, pause: 700 },[m
+[31m-      { text: "", pause: 500 },[m
+[31m-      { text: "Their message arrives in every language simultaneously:", hl: false, pause: 700 },[m
+[31m-      { text: "Send your champion.", alien: true, pause: 400 },[m
+[31m-      { text: "One game.", alien: true, pause: 400 },[m
+[31m-      { text: "Winner takes all.", alien: true, pause: 900 },[m
+[31m-      { text: "", pause: 500 },[m
+[31m-      { text: "Defeat — and Earth is erased from existence.", hl: false, pause: 700 },[m
+[31m-      { text: "Victory — and humanity earns its place among the stars.", hl: false, pause: 700 },[m
+[31m-      { text: "", pause: 400 },[m
+[31m-      { text: "Billions of lives rest on a single paddle.", hl: false, pause: 700 },[m
+[31m-      { text: "You are Earth's last hope.", hl: true, pause: 800 },[m
+[31m-      { text: "", pause: 300 },[m
+[31m-      { text: "Do not fail them.", hl: false, pause: 500 },[m
+[31m-    ];[m
+[31m-[m
+[31m-    let storyIdx = 0, storyCharIdx = 0, storyTimer = null, storyDone = false;[m
+[31m-[m
+     function startNarrative() {[m
+       state = 'narrative';[m
+       audioCtx.resume();[m
+       startScreen.classList.add('hidden');[m
+[31m-      narrativeScreen.classList.remove('hidden');[m
+[31m-      document.getElementById('narrative-prompt').style.visibility = 'hidden';[m
+[31m-      document.getElementById('narrative-lines').innerHTML = '';[m
+[31m-      storyIdx = 0; storyCharIdx = 0; storyDone = false;[m
+[31m-      document.getElementById('narrative-content').style.background = 'transparent';[m
+[31m-      storyTimer = setTimeout(typeStory, 5000); // wait for animation (3.5s) + 1.5s pause[m
+[31m-    }[m
+[31m-[m
+[31m-    function typeStory() {[m
+[31m-      if (storyIdx === 0 && storyCharIdx === 0)[m
+[31m-        document.getElementById('narrative-content').style.background = 'rgba(5,5,15,0.45)';[m
+[31m-      if (storyIdx >= STORY.length) { finishStory(); return; }[m
+[31m-      const entry = STORY[storyIdx];[m
+[31m-      const linesEl = document.getElementById('narrative-lines');[m
+[31m-[m
+[31m-      if (storyCharIdx === 0) {[m
+[31m-        const p = document.createElement('p');[m
+[31m-        if (entry.alien) p.className = 'alien';[m
+[31m-        else if (entry.hl) p.className = 'hl';[m
+[31m-        p.id = 'sl' + storyIdx;[m
+[31m-        linesEl.appendChild(p);[m
+[31m-      }[m
+[31m-[m
+[31m-      if (entry.text === '') {[m
+[31m-        storyIdx++; storyCharIdx = 0;[m
+[31m-        storyTimer = setTimeout(typeStory, entry.pause);[m
+[31m-        return;[m
+[31m-      }[m
+[31m-[m
+[31m-      const p = document.getElementById('sl' + storyIdx);[m
+[31m-      p.textContent += entry.text[storyCharIdx];[m
+[31m-      playTypeBeep();[m
+[31m-      storyCharIdx++;[m
+[31m-[m
+[31m-      if (storyCharIdx >= entry.text.length) {[m
+[31m-        storyIdx++; storyCharIdx = 0;[m
+[31m-        storyTimer = setTimeout(typeStory, entry.pause);[m
+[31m-      } else {[m
+[31m-        storyTimer = setTimeout(typeStory, 38);[m
+[31m-      }[m
+[31m-    }[m
+[31m-[m
+[31m-    function finishStory() {[m
+[31m-      storyDone = true;[m
+[31m-      document.getElementById('narrative-prompt').style.visibility = 'visible';[m
+[31m-    }[m
+[31m-[m
+[31m-    function skipStory() {[m
+[31m-      clearTimeout(storyTimer);[m
+[31m-      document.getElementById('narrative-content').style.background = 'rgba(5,5,15,0.45)';[m
+[31m-      const linesEl = document.getElementById('narrative-lines');[m
+[31m-      linesEl.innerHTML = '';[m
+[31m-      STORY.forEach((entry, i) => {[m
+[31m-        const p = document.createElement('p');[m
+[31m-        if (entry.alien) p.className = 'alien';[m
+[31m-        else if (entry.hl) p.className = 'hl';[m
+[31m-        p.textContent = entry.text;[m
+[31m-        linesEl.appendChild(p);[m
+[31m-      });[m
+[31m-      finishStory();[m
+[32m+[m[32m      Cutscenes.intro.show();[m
+     }[m
+ [m
+     function beginGame() {[m
+[31m-      narrativeScreen.classList.add('hidden');[m
+[32m+[m[32m      Cutscenes.intro.hide();[m
+[32m+[m[32m      hideStarCanvas();[m
+       audioCtx.resume();[m
+       resetGame();[m
+       state = 'playing';[m
+[36m@@ -1167,7 +1190,7 @@[m
+ [m
+     canvas.addEventListener('click', () => {[m
+       if (state === 'idle') { startNarrative(); }[m
+[31m-      else if (state === 'narrative') { if (!storyDone) skipStory(); else beginGame(); }[m
+[32m+[m[32m      else if (state === 'narrative') { if (!Cutscenes.intro.isDone()) Cutscenes.intro.skip(); else beginGame(); }[m
+       else if (state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; startMusic(); }[m
+     });[m
+ [m
+[36m@@ -1178,7 +1201,7 @@[m
+ [m
+       if (e.key === ' ') {[m
+         if (state === 'idle') { startNarrative(); }[m
+[31m-        else if (state === 'narrative') { if (!storyDone) skipStory(); else beginGame(); }[m
+[32m+[m[32m        else if (state === 'narrative') { if (!Cutscenes.intro.isDone()) Cutscenes.intro.skip(); else beginGame(); }[m
+         else if (state === 'win') { audioCtx.resume(); resetGame(); state = 'playing'; startMusic(); }[m
+         else if (state === 'playing') {[m
+           state = 'paused';[m
+[36m@@ -1215,6 +1238,9 @@[m
+ [m
+     // ─── Game logic ───────────────────────────────────────────────────────────[m
+     function resetGame() {[m
+[32m+[m[32m      Cutscenes.defeat.hide();[m
+[32m+[m[32m      Cutscenes.victory.hide();[m
+[32m+[m[32m      hideStarCanvas();[m
+       stopShieldSound(); stopChargingSound(); shieldIsOn = false; shieldEndTime = 0; shieldReadyTime = 0;[m
+       applyNextBackground();[m
+       player.score = 0; ai.score = 0;[m
+[36m@@ -1264,6 +1290,8 @@[m
+       winnerText = who === 'YOU' ? 'YOU WIN!' : 'CPU WINS!';[m
+       winReason  = who === 'YOU' ? 'CPU paddle destroyed by bullets' : 'Your paddle was shot to pieces';[m
+       syncMusicToState();[m
+[32m+[m[32m      if (paddle === player) Cutscenes.defeat.show(2000);[m
+[32m+[m[32m      else                   Cutscenes.victory.show(2000);[m
+     }[m
+ [m
+     // Returns true only when every Y slice of the paddle is inside a penetrating cavity's[m
+[36m@@ -1695,6 +1723,8 @@[m
+         winnerText = who === 'YOU' ? 'YOU WIN!' : 'CPU WINS!';[m
+         winReason  = `First to ${WIN_SCORE} points`;[m
+         syncMusicToState();[m
+[32m+[m[32m        if (who === 'CPU') Cutscenes.defeat.show(2000);[m
+[32m+[m[32m        else               Cutscenes.victory.show(2000);[m
+       }[m
+     }[m
+ [m
